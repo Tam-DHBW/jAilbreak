@@ -1,20 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 6.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = "eu-central-1"
-}
-
-resource "aws_cognito_user_pool" "users" {
-  name = "jb_users"
-}
-
 data "external" "api_spec" {
   program = ["cargo", "run", "--bin", "generate_tf"]
 }
@@ -66,5 +49,3 @@ resource "aws_api_gateway_rest_api" "rest_api" {
     }
   })
 }
-
-// vim: commentstring=//\ %s

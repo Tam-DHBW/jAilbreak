@@ -1,4 +1,4 @@
-backend/terraform/.terraform
+terraform/.terraform
 **/*.tfstate
 **/*.tfstate.backup
 backend/target
