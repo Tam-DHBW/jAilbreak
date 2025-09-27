@@ -1,5 +1,6 @@
 data "external" "api_spec" {
   program = ["cargo", "run", "--bin", "generate_tf"]
+  working_dir = "${path.module}/../backend"
 }
 
 locals {
