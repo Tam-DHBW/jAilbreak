@@ -15,7 +15,7 @@
           config.allowUnfree = true;
         };
 
-        devShells.default = pkgs.mkShell {
+        devShells.default = pkgs.mkShell.override { stdenv = pkgs.stdenvAdapters.useMoldLinker pkgs.stdenv; } {
           packages = with pkgs; [ 
             awscli2 
             aws-sam-cli 
@@ -24,6 +24,7 @@
             cargo
             rust-analyzer
             rustfmt
+            cargo-lambda
           ];
         };
       };
