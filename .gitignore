@@ -1,0 +1,4 @@
+backend/terraform/.terraform
+**/*.tfstate
+**/*.tfstate.backup
+backend/target

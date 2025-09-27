@@ -1,0 +1,11 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = "0.8.4"
+lambda_http = "0.17.0"
+preinterpret = "0.2.0"
+serde_json = "1.0.145"
+tokio = { version = "1.47.1", features = ["rt", "macros"] }
