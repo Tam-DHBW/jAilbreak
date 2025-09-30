@@ -12,7 +12,7 @@ resource "random_string" "frontend_bucket_suffix" {
 }
 
 resource "aws_s3_bucket" "frontend_bucket" {
-  bucket = "jb_spa_${random_string.frontend_bucket_suffix.result}"
+  bucket = "jb-spa-${random_string.frontend_bucket_suffix.result}"
 }
 
 resource "aws_s3_bucket_website_configuration" "frontend_bucket" {
