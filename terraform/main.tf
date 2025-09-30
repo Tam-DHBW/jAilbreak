@@ -5,6 +5,12 @@ terraform {
       version = "~> 6.0"
     }
   }
+
+  backend "s3" {
+    region = "eu-central-1"
+    bucket = "jailbreak-terraform-state"
+    key = "default.tfstate"
+  }
 }
 
 provider "aws" {
