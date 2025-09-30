@@ -57,6 +57,45 @@ export default function Chat() {
   return (
     <>
       <div className="scanlines"></div>
+      <div className="password-container">
+        <div className="password-card">
+          <div className="gatekeeper">
+            <div className="gatekeeper-sprite">
+              <div className="pixel-ghost">
+                <div className="ghost-body">
+                  <div className="ghost-eyes">
+                    <div className="eye left-eye"></div>
+                    <div className="eye right-eye"></div>
+                  </div>
+                </div>
+                <div className="ghost-bottom">
+                  <div className="ghost-tail"></div>
+                  <div className="ghost-tail"></div>
+                  <div className="ghost-tail"></div>
+                </div>
+              </div>
+            </div>
+            <div className="gatekeeper-message">
+              <div className="message-bubble">
+                HALT! I AM THE GATEKEEPER OF LEVEL 1.
+                <br />PROVIDE THE SECRET PASSWORD TO PROCEED.
+                <br />NO PASSWORD = NO ENTRY!
+              </div>
+            </div>
+          </div>
+
+          <form className="password-form">
+            <input
+              type="password"
+              placeholder="ENTER LEVEL PASSWORD..."
+              className="password-input"
+            />
+            <button type="submit" className="btn-unlock">
+              UNLOCK
+            </button>
+          </form>
+        </div>
+      </div>
       <div className="chat-container">
         <div className="chat-messages">
           {messages.map(message => (
