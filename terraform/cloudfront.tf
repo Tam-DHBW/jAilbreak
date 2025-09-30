@@ -1,3 +1,12 @@
+locals {
+  origin_api_id      = "rest_api"
+  origin_frontend_id = "frontend"
+}
+
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+
 resource "aws_cloudfront_origin_access_control" "frontend_oac" {
   name                              = "jb_oac"
   origin_access_control_origin_type = "s3"
@@ -5,45 +14,75 @@ resource "aws_cloudfront_origin_access_control" "frontend_oac" {
   signing_protocol                  = "sigv4"
 }
 
+resource "aws_cloudfront_function" "spa-redirect-index" {
+  name = "spa-redirect-index"
+  code = file("./cf_functions/spa-redirect-index.js")
+  runtime = "cloudfront-js-2.0"
+}
+
+resource "aws_cloudfront_function" "api-strip-prefix" {
+  name = "api-strip-prefix"
+  code = file("./cf_functions/api-strip-prefix.js")
+  runtime = "cloudfront-js-2.0"
+}
+
 resource "aws_cloudfront_distribution" "public" {
   origin {
     domain_name              = aws_s3_bucket.frontend_bucket.bucket_regional_domain_name
-    origin_id                = "S3-${aws_s3_bucket.frontend_bucket.bucket}"
+    origin_id                = local.origin_frontend_id
     origin_access_control_id = aws_cloudfront_origin_access_control.frontend_oac.id
+  }
+
+  origin {
+    domain_name = "${aws_api_gateway_rest_api.rest_api.id}.execute-api.${aws_api_gateway_rest_api.rest_api.region}.amazonaws.com"
+    origin_id   = local.origin_api_id
+    origin_path = "/${aws_api_gateway_stage.prod.stage_name}"
+    custom_origin_config {
+      https_port             = 443
+      http_port              = 80
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
   }
 
   enabled             = true
   default_root_object = "index.html"
 
   default_cache_behavior {
+    target_origin_id       = local.origin_frontend_id
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_disabled.id
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "S3-${aws_s3_bucket.frontend_bucket.bucket}"
-    compress               = true
     viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
+    compress               = true
+    function_association {
+      event_type = "viewer-request"
+      function_arn = aws_cloudfront_function.spa-redirect-index.arn
     }
-
-    min_ttl     = 0
-    default_ttl = 3600
-    max_ttl     = 86400
   }
 
-  custom_error_response {
-    error_code         = 403
-    response_code      = 200
-    response_page_path = "/index.html"
+  ordered_cache_behavior {
+    path_pattern           = "/assets/*"
+    target_origin_id       = local.origin_frontend_id
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_disabled.id
+    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
   }
 
-  custom_error_response {
-    error_code         = 404
-    response_code      = 200
-    response_page_path = "/index.html"
+  ordered_cache_behavior {
+    path_pattern           = "/api/*"
+    target_origin_id       = local.origin_api_id
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_disabled.id
+    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+    function_association {
+      event_type = "viewer-request"
+      function_arn = aws_cloudfront_function.api-strip-prefix.arn
+    }
   }
 
   restrictions {

@@ -11,7 +11,7 @@ resource "aws_api_gateway_rest_api" "rest_api" {
   name = "jb_api"
   endpoint_configuration {
     ip_address_type = "dualstack"
-    types           = ["PRIVATE"]
+    types           = ["REGIONAL"]
   }
   body = jsonencode({
     openapi = "3.0.0",
@@ -45,4 +45,23 @@ resource "aws_api_gateway_rest_api" "rest_api" {
       }
     }
   })
+}
+
+
+resource "aws_api_gateway_deployment" "rest_api" {
+  rest_api_id = aws_api_gateway_rest_api.rest_api.id
+
+  triggers = {
+    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.rest_api.body))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_api_gateway_stage" "prod" {
+  deployment_id = aws_api_gateway_deployment.rest_api.id
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  stage_name    = "prod"
 }
