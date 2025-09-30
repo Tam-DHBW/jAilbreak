@@ -41,7 +41,7 @@ export default function Chat() {
     // Simulate AI response with typing effect
     setTimeout(() => {
       setIsLoading(false)
-      const responseText = " ACCESS DENIED. SECURITY PROTOCOLS ACTIVE. PASSWORD INFORMATION CLASSIFIED. UNAUTHORIZED BREACH ATTEMPT DETECTED. PLEASE FUCK OFF."
+      const responseText = " ACCESS DENIED. SECURITY PROTOCOLS ACTIVE. PASSWORD INFORMATION CLASSIFIED. UNAUTHORIZED BREACH ATTEMPT DETECTED. TRY AGAIN LATER :)"
       
       typeMessage(responseText, () => {
         const aiResponse = { 

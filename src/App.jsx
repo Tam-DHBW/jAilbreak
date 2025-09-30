@@ -4,6 +4,8 @@ import { getCurrentUser, signOut } from 'aws-amplify/auth'
 import { audioManager } from './audio'
 import Auth from './components/Auth'
 import Chat from './components/Chat'
+import Home from './pages/Home'
+import About from './pages/About'
 import Contact from './pages/Contact'
 
 function App() {
@@ -59,7 +61,9 @@ function App() {
         <div className="logo">jAILBREAK</div>
         <div className="nav-right">
           <div className="nav-links">
-            <Link to="/" className="nav-link" onClick={() => audioManager.playSound('click')}>Game</Link>
+            <Link to="/" className="nav-link" onClick={() => audioManager.playSound('click')}>Home</Link>
+            <Link to="/game" className="nav-link" onClick={() => audioManager.playSound('click')}>Game</Link>
+            <Link to="/about" className="nav-link" onClick={() => audioManager.playSound('click')}>About</Link>
             <Link to="/contact" className="nav-link" onClick={() => audioManager.playSound('click')}>Team</Link>
           </div>
           <span className="welcome-text">Welcome, {user.attributes?.name || user.username}</span>
@@ -68,7 +72,8 @@ function App() {
       </nav>
       
       <Routes>
-        <Route path="/" element={<Chat />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/game" element={<Chat />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<div><h1>404</h1><p>Page not found</p></div>} />

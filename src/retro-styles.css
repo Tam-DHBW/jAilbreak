@@ -103,6 +103,11 @@ body {
   box-shadow: inset 2px 2px 0 #306230;
 }
 
+.form-input::placeholder {
+  color: #0f380f;
+  opacity: 1;
+}
+
 .form-input:focus {
   outline: none;
   background: #9bbc0f;
@@ -327,6 +332,11 @@ body {
   background: #8bac0f;
   color: #0f380f;
   box-shadow: inset 2px 2px 0 #306230;
+}
+
+.chat-input::placeholder {
+  color: #0f380f;
+  opacity: 1;
 }
 
 .chat-input:focus {
