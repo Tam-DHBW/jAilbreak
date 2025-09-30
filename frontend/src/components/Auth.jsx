@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { signUp, signIn, confirmSignUp } from 'aws-amplify/auth'
+import { signUp, signIn, confirmSignUp, signOut } from 'aws-amplify/auth'
 import { audioManager } from '../audio'
 
 export default function Auth({ onAuthSuccess }) {
@@ -10,6 +10,8 @@ export default function Auth({ onAuthSuccess }) {
   const [name, setName] = useState('')
   const [confirmationCode, setConfirmationCode] = useState('')
   const [error, setError] = useState('')
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -37,7 +39,20 @@ export default function Auth({ onAuthSuccess }) {
         setNeedsConfirmation(true)
       }
     } catch (err) {
-      setError(err.message)
+      if (err.message.includes('already a signed in user')) {
+        // Clear the session and reset form
+        try {
+          await signOut()
+          setError('')
+          setEmail('')
+          setPassword('')
+          setName('')
+        } catch (signOutErr) {
+          setError('Please clear your browser data: Settings > Privacy > Clear browsing data')
+        }
+      } else {
+        setError(err.message)
+      }
     }
   }
 

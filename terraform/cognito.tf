@@ -61,7 +61,7 @@ data "aws_iam_policy_document" "assume_authenticated" {
     condition {
       test     = "StringEquals"
       variable = "cognito-identity.amazonaws.com:aud"
-      values   = [aws_cognito_user_pool.players.id]
+      values   = [aws_cognito_identity_pool.players.id]
     }
     condition {
       test     = "ForAnyValue:StringLike"
