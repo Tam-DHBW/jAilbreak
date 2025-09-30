@@ -10,6 +10,7 @@ terraform {
     region = "eu-central-1"
     bucket = "jailbreak-terraform-state"
     key = "default.tfstate"
+    use_lockfile = true
   }
 }
 
