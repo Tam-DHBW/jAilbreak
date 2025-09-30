@@ -55,4 +55,6 @@ resource "aws_cloudfront_distribution" "public" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
+  wait_for_deployment = false
 }
