@@ -2,9 +2,9 @@
 export const awsConfig = {
   Auth: {
     Cognito: {
-      userPoolId: 'eu-central-1_yVRt9an9Q',        // Cognito User Pool ID for user management
-      userPoolClientId: '7j4p2pidbarqutnp15evetdhps', // App client ID for authentication
-      identityPoolId: 'eu-central-1:5be21a9b-ad2c-4509-8e0b-224804410240', // Identity Pool for AWS resource access
+      userPoolId: 'eu-central-1_yVRt9an9Q',       
+      userPoolClientId: '7j4p2pidbarqutnp15evetdhps', 
+      identityPoolId: 'eu-central-1:5be21a9b-ad2c-4509-8e0b-224804410240', 
       loginWith: {
         email: true
       },
