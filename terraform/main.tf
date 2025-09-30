@@ -8,9 +8,5 @@ terraform {
 }
 
 provider "aws" {
-  region = "eu-central-1"
-}
-
-resource "aws_cognito_user_pool" "users" {
-  name = "jb_users"
+  region = var.aws_region
 }
