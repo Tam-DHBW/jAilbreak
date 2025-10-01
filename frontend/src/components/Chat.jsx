@@ -25,7 +25,7 @@ export default function Chat() {
         setTypingText('')
         callback()
       }
-    }, 50)
+    }, 40)
   }
 
   const handleSubmit = async (e) => {
