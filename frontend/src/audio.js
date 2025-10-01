@@ -8,7 +8,7 @@ class AudioManager {
 
   init() {
     // Create background music
-    this.backgroundMusic = new Audio('/background-music.mp3')
+    this.backgroundMusic = new Audio('/assets/background-music.mp3')
     this.backgroundMusic.loop = true
     this.backgroundMusic.volume = 0.3
 

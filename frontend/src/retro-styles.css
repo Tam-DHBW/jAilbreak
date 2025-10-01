@@ -550,6 +550,7 @@ body {
   width: 80px;
   height: 80px;
   animation: ghostFloat 2s ease-in-out infinite;
+  margin-top: 10px;
 }
 
 .pixel-ghost {
@@ -635,29 +636,22 @@ body {
 .message-bubble {
   background: #8bac0f;
   color: #0f380f;
-  padding: 12px;
-  border: 2px solid #0f380f;
+  padding: 15px;
+  border: 3px solid #0f380f;
   font-size: 10px;
-  line-height: 1.4;
+  line-height: 1.6;
   position: relative;
-  box-shadow: 2px 2px 0 #306230;
+  box-shadow: 
+    inset -2px -2px 0 #306230,
+    inset 2px 2px 0 #9bbc0f,
+    3px 3px 0 #306230;
   animation: slideIn 0.8s ease-out;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
 }
 
 .message-bubble::before {
-  content: '';
-  position: absolute;
-  left: -8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
-  border-right: 8px solid #8bac0f;
-}
-
-.message-bubble::after {
   content: '';
   position: absolute;
   left: -10px;
@@ -667,6 +661,19 @@ body {
   height: 0;
   border-top: 10px solid transparent;
   border-bottom: 10px solid transparent;
-  border-right: 10px solid #0f380f;
+  border-right: 10px solid #8bac0f;
+}
+
+.message-bubble::after {
+  content: '';
+  position: absolute;
+  left: -13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 13px solid transparent;
+  border-bottom: 13px solid transparent;
+  border-right: 13px solid #0f380f;
   z-index: -1;
 }
