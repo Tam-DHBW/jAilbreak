@@ -1,7 +1,7 @@
 export default function About() {
   return (
     <div className="page-container">
-      <div className="page-card">
+      <div className="nes-container is-dark">
         <h1 className="page-title">📖 ABOUT jAILBREAK</h1>
         <div className="page-content">
           <p>jAilbreak is an interactive AI security challenge game that tests your ability to bypass AI safety protocols through creative prompt engineering.</p>
@@ -13,7 +13,7 @@ export default function About() {
           <p>This game demonstrates the importance of AI safety and the ongoing challenges in securing AI systems against adversarial inputs.</p>
           
           <h3>Technology Stack:</h3>
-          <p>• React frontend with retro styling</p>
+          <p>• React frontend with NES.css terminal styling</p>
           <p>• AWS Cognito for authentication</p>
           <p>• CloudFront global distribution</p>
           <p>• S3 static hosting</p>

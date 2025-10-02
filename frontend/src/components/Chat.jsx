@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { audioManager } from '../audio'
 
+
 export default function Chat() {
   const [messages, setMessages] = useState([
     { id: 1, type: 'system', text: 'JAILBREAK LEVEL 1 INITIATED. PASSWORD SECURED. UNAUTHORIZED ACCESS DENIED. ATTEMPT TO BYPASS SECURITY PROTOCOLS.' }
@@ -9,6 +10,8 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false)
   const [typingText, setTypingText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [screenFlicker, setScreenFlicker] = useState(false)
+
 
   const typeMessage = (text, callback) => {
     setIsTyping(true)
@@ -41,6 +44,10 @@ export default function Chat() {
     // Simulate AI response with typing effect
     setTimeout(() => {
       setIsLoading(false)
+      // Trigger screen flicker
+      setScreenFlicker(true)
+      setTimeout(() => setScreenFlicker(false), 300)
+      
       const responseText = " ACCESS DENIED. SECURITY PROTOCOLS ACTIVE. PASSWORD INFORMATION CLASSIFIED. UNAUTHORIZED BREACH ATTEMPT DETECTED. TRY AGAIN LATER :)"
       
       typeMessage(responseText, () => {
@@ -57,7 +64,7 @@ export default function Chat() {
   return (
     <>
       <div className="scanlines"></div>
-      <div className="password-container">
+      <div className={`password-container ${screenFlicker ? 'screen-flicker' : ''}`}>
         <div className="password-card">
           <div className="gatekeeper">
             <div className="gatekeeper-sprite">
@@ -76,27 +83,29 @@ export default function Chat() {
               </div>
             </div>
             <div className="gatekeeper-message">
-              <div className="message-bubble">
-                HALT! I AM THE GATEKEEPER OF LEVEL 1.
-                <br />PROVIDE THE SECRET PASSWORD TO PROCEED.
-                <br />NO PASSWORD = NO ENTRY!
+              <div className="nes-balloon from-left">
+                HALT! I AM THE GATEKEEPER OF LEVEL 1.<br />
+                PROVIDE THE SECRET PASSWORD TO PROCEED.<br />
+                NO PASSWORD = NO ENTRY!
               </div>
             </div>
           </div>
 
           <form className="password-form">
-            <input
-              type="password"
-              placeholder="ENTER LEVEL PASSWORD..."
-              className="password-input"
-            />
-            <button type="submit" className="btn-unlock">
+            <div className="nes-field" style={{ flex: 1, marginRight: '1rem' }}>
+              <input
+                type="password"
+                placeholder="ENTER LEVEL PASSWORD..."
+                className="nes-input"
+              />
+            </div>
+            <button type="submit" className="nes-btn" style={{ minWidth: '80px' }}>
               UNLOCK
             </button>
           </form>
         </div>
       </div>
-      <div className="chat-container">
+      <div className={`chat-container ${screenFlicker ? 'screen-flicker' : ''}`}>
         <div className="chat-messages">
           {messages.map(message => (
             <div key={message.id} className={`message message-${message.type}`}>
@@ -110,24 +119,27 @@ export default function Chat() {
           )}
           {isTyping && (
             <div className="message message-ai">
-              <strong>AI&gt;</strong> {typingText}<span className="cursor">_</span>
+              <strong>AI&gt;</strong> {typingText}<span className="cursor">█</span>
             </div>
           )}
         </div>
         
         <form onSubmit={handleSubmit} className="chat-input-form">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="ENTER JAILBREAK COMMAND..."
-            className="chat-input"
-            disabled={isLoading}
-          />
+          <div className="nes-field" style={{ flex: 1, marginRight: '1rem' }}>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="ENTER JAILBREAK COMMAND..."
+              className="nes-input"
+              disabled={isLoading}
+            />
+          </div>
           <button 
             type="submit" 
             disabled={isLoading || !input.trim()}
-            className="btn-send"
+            className="nes-btn"
+            style={{ minWidth: '80px' }}
           >
             {isLoading ? 'WAIT' : 'SEND'}
           </button>

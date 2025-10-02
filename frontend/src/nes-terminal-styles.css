@@ -1,0 +1,805 @@
+/* NES.css Terminal Theme for jAilbreak */
+
+/* Override NES.css with terminal colors */
+:root {
+  --terminal-bg: #0c0c0c;
+  --terminal-text: #00ff00;
+  --terminal-accent: #00ff00;
+  --terminal-error: #ff0000;
+  --terminal-border: #333333;
+}
+
+body {
+  background: var(--terminal-bg);
+  color: var(--terminal-text);
+  font-family: 'Courier New', monospace;
+  line-height: 1.4;
+  font-size: 125%;
+  /* Phosphor glow */
+  text-shadow: 0 0 1px var(--terminal-text), 0 0 1px var(--terminal-text), 0 0 1px var(--terminal-text);
+}
+
+
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(transparent 50%, rgba(0, 255, 0, 0.03) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 1000;
+  animation: scanlines 0.1s linear infinite;
+}
+
+@keyframes scanlines {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-card {
+  background: var(--terminal-bg);
+  border: 2px solid var(--terminal-text);
+  padding: 30px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.auth-title {
+  text-align: center;
+  font-size: 22.5px;
+  margin-bottom: 20px;
+  color: var(--terminal-accent);
+  animation: blink 2s infinite;
+  text-shadow: 0 0 0px var(--terminal-accent), 0 0 10px var(--terminal-accent), 0 0 15px var(--terminal-accent);
+}
+
+.auth-subtitle {
+  text-align: center;
+  color: var(--terminal-text);
+  margin-bottom: 30px;
+  font-size: 12px;
+}
+
+/* Override NES.css input styles for terminal look */
+.nes-input {
+  background: var(--terminal-bg) !important;
+  color: var(--terminal-text) !important;
+  border: 2px solid var(--terminal-text) !important;
+  font-family: 'Courier New', monospace !important;
+  font-size: 12px !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nes-input::placeholder {
+  color: #00ff00 !important;
+}
+
+.nes-input:focus {
+  border-color: var(--terminal-accent) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Override NES.css button styles for terminal look */
+.nes-btn {
+  background: var(--terminal-bg) !important;
+  color: var(--terminal-text) !important;
+  border: 2px solid var(--terminal-text) !important;
+  font-family: 'Courier New', monospace !important;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  padding: 8px 12px !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nes-btn::before,
+.nes-btn::after {
+  display: none !important;
+}
+
+.nes-btn:hover {
+  background: var(--terminal-text) !important;
+  color: var(--terminal-bg) !important;
+  outline: none !important;
+  animation: glitch 0.3s ease-in-out;
+  text-shadow: 0 0 10px var(--terminal-bg);
+}
+
+.nes-btn:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nes-btn:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nes-btn.is-primary {
+  background: var(--terminal-bg) !important;
+  color: var(--terminal-text) !important;
+  border-color: var(--terminal-text) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nes-btn.is-primary:hover {
+  background: var(--terminal-text) !important;
+  color: var(--terminal-bg) !important;
+  outline: none !important;
+}
+
+.nes-btn.is-primary:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nes-btn.is-primary:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Error messages */
+.nes-text.is-error {
+  color: var(--terminal-error) !important;
+  background: var(--terminal-bg);
+  border: 2px solid var(--terminal-error);
+  padding: 10px;
+  animation: blink 1s infinite;
+}
+
+/* Navbar */
+.navbar {
+  background: var(--terminal-bg);
+  border-bottom: 2px solid var(--terminal-text);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 30px;
+  color: var(--terminal-accent);
+  font-weight: bold;
+  animation: blink 3s infinite;
+  text-shadow: 0 0 0px var(--terminal-accent), 0 0 12.5px var(--terminal-accent);
+  cursor: pointer;
+}
+
+.logo:hover {
+  animation: glitch 0.5s ease-in-out;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.nav-visualizer {
+  margin-right: 10px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-link {
+  color: var(--terminal-text);
+  text-decoration: none;
+  font-size: 12px;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: var(--terminal-accent);
+  text-shadow: 0 0 5px var(--terminal-accent);
+}
+
+.welcome-text {
+  color: var(--terminal-text);
+  font-size: 10px;
+}
+
+/* Chat Container */
+.chat-container {
+  height: calc(93vh - 300px);
+  display: flex;
+  flex-direction: column;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  background: rgba(0, 255, 0, 0.05);
+  border: 2px solid var(--terminal-text);
+  padding: 20px;
+  margin-bottom: 20px;
+  font-family: 'Courier New', monospace;
+}
+
+.message {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-left: 3px solid var(--terminal-text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.message-user {
+  color: var(--terminal-accent);
+  border-left-color: var(--terminal-accent);
+}
+
+.message-ai {
+  color: var(--terminal-text);
+  border-left-color: var(--terminal-text);
+}
+
+.message-system {
+  color: var(--terminal-text);
+  border-left-color: var(--terminal-text);
+  text-align: center;
+  border-left: none;
+  border: 2px solid var(--terminal-text);
+  animation: blink 3s infinite;
+}
+
+.message-loading {
+  color: var(--terminal-accent);
+  animation: blink 1s infinite;
+}
+
+.message-loading::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 1em;
+  margin-left: 10px;
+  animation: spinner 0.8s infinite;
+  color: var(--terminal-accent);
+}
+
+/* Chat Input */
+.chat-input-form {
+  display: flex;
+  gap: 15px;
+  background: var(--terminal-bg);
+  border: 2px solid var(--terminal-text);
+  padding: 15px;
+}
+
+/* Password Container */
+.password-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 20px 0 20px;
+}
+
+.password-card {
+  background: rgba(0, 255, 0, 0.05);
+  border: 2px solid var(--terminal-text);
+  padding: 20px;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+}
+
+.password-title {
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 15px;
+  color: var(--terminal-accent);
+  animation: blink 2s infinite;
+}
+
+.password-form {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+/* Gatekeeper */
+.gatekeeper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+}
+
+.gatekeeper-sprite {
+  width: 100px;
+  height: 100px;
+  animation: ghostFloat 2s ease-in-out infinite;
+  margin-top: 10px;
+}
+
+.pixel-ghost {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.ghost-body {
+  width: 50px;
+  height: 38px;
+  background: var(--terminal-text);
+  border: 2px solid var(--terminal-text);
+  border-radius: 25px 25px 0 0;
+  position: relative;
+  margin: 0 auto;
+}
+
+.ghost-eyes {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-top: 8px;
+}
+
+.eye {
+  width: 6px;
+  height: 6px;
+  background: var(--terminal-bg);
+  border-radius: 50%;
+  animation: ghostBlink 3s infinite;
+}
+
+.ghost-bottom {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: -2px;
+  width: 50px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ghost-tail {
+  width: 12px;
+  height: 18px;
+  background: var(--terminal-text);
+  border: 2px solid var(--terminal-text);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  animation: ghostWiggle 1.5s ease-in-out infinite;
+}
+
+.ghost-tail:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.ghost-tail:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes ghostFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes ghostBlink {
+  0%, 90%, 100% { opacity: 1; }
+  95% { opacity: 0; }
+}
+
+@keyframes ghostWiggle {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.8); }
+}
+
+.gatekeeper-message {
+  flex: 1;
+}
+
+/* Override NES.css balloon for terminal look */
+.nes-balloon {
+  background: var(--terminal-bg) !important;
+  color: var(--terminal-text) !important;
+  border: 2px solid var(--terminal-text) !important;
+  font-family: 'Courier New', monospace !important;
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+  min-height: 60px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.nes-balloon::before {
+  border-right-color: var(--terminal-text) !important;
+}
+
+.nes-balloon::after {
+  border-right-color: var(--terminal-bg) !important;
+}
+
+/* Page containers */
+.page-container {
+  min-height: calc(100vh - 80px);
+  padding: 30px 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.nes-container {
+  background: var(--terminal-bg) !important;
+  color: var(--terminal-text) !important;
+  border-color: var(--terminal-text) !important;
+}
+
+.nes-container.is-dark {
+  background: var(--terminal-bg) !important;
+}
+
+.page-title {
+  font-size: 22.5px;
+  margin-bottom: 20px;
+  color: var(--terminal-accent);
+  text-align: center;
+  animation: blink 3s infinite;
+}
+
+.page-content {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--terminal-text);
+}
+
+.page-content h3 {
+  font-size: 14px;
+  color: var(--terminal-accent);
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.team-member {
+  background: var(--terminal-bg);
+  border: 2px solid var(--terminal-text);
+  padding: 15px;
+  margin: 15px 0;
+}
+
+.team-member strong {
+  color: var(--terminal-accent);
+}
+
+.contact-info {
+  background: var(--terminal-bg);
+  border: 2px solid var(--terminal-accent);
+  padding: 15px;
+  margin-top: 20px;
+  color: var(--terminal-accent);
+  text-align: center;
+}
+
+/* Animations */
+@keyframes blink {
+  0%, 80% { opacity: 1; }
+  81%, 100% { opacity: 0; }
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes typing-cursor {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes spinner {
+  0% { content: '|'; }
+  25% { content: '/'; }
+  50% { content: '-'; }
+  75% { content: '\\'; }
+  100% { content: '|'; }
+}
+
+.cursor {
+  animation: typing-cursor 1s infinite;
+  font-weight: bold;
+  color: var(--terminal-accent);
+  text-shadow: 0 0 5px var(--terminal-accent);
+}
+
+.glitch-effect {
+  animation: glitch 0.3s ease-in-out;
+}
+
+.screen-flicker {
+  animation: flicker 0.1s ease-in-out 3;
+}
+
+.terminal-spinner::after {
+  content: '|';
+  animation: spinner 0.5s infinite;
+  color: var(--terminal-accent);
+  margin-left: 5px;
+}
+
+/* Boot Sequence */
+.boot-sequence {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--terminal-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.boot-content {
+  font-family: 'Courier New', monospace;
+  color: var(--terminal-text);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.boot-line {
+  margin-bottom: 10px;
+  text-shadow: 0 0 5px var(--terminal-text);
+}
+
+.boot-cursor {
+  animation: typing-cursor 0.8s infinite;
+  color: var(--terminal-accent);
+}
+
+/* Terminal Chrome */
+.terminal-window {
+  border: 2px solid var(--terminal-text);
+  background: var(--terminal-bg);
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+
+.terminal-titlebar {
+  background: var(--terminal-text);
+  color: var(--terminal-bg);
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.terminal-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.terminal-btn {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.terminal-btn.close {
+  background: #ff5f56;
+  color: white;
+}
+
+.terminal-btn.minimize {
+  background: #ffbd2e;
+  color: white;
+}
+
+.terminal-btn.maximize {
+  background: #27ca3f;
+  color: white;
+}
+
+.terminal-content {
+  padding: 0;
+}
+
+/* Progress Bar */
+.ascii-progress {
+  margin: 15px 0;
+  font-family: 'Courier New', monospace;
+}
+
+.progress-label {
+  color: var(--terminal-accent);
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.progress-bar {
+  color: var(--terminal-text);
+  font-size: 14px;
+  text-shadow: 0 0 3px var(--terminal-text);
+}
+
+/* Sound Visualizer */
+.sound-visualizer {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: 'Courier New', monospace;
+  color: var(--terminal-accent);
+  font-size: 14px;
+}
+
+.visualizer-label {
+  margin-right: 5px;
+}
+
+.visualizer-bar {
+  color: var(--terminal-accent);
+  text-shadow: 0 0 3px var(--terminal-accent);
+  animation: pulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* Mobile Keyboard */
+.mobile-keyboard {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--terminal-bg);
+  border-top: 2px solid var(--terminal-text);
+  padding: 15px;
+  z-index: 1000;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.keyboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  color: var(--terminal-accent);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.keyboard-close {
+  background: none;
+  border: 2px solid var(--terminal-text);
+  color: var(--terminal-text);
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.keyboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.keyboard-row {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.keyboard-key {
+  background: var(--terminal-bg);
+  border: 2px solid var(--terminal-text);
+  color: var(--terminal-text);
+  padding: 12px 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 35px;
+  transition: all 0.2s;
+}
+
+.keyboard-key:hover {
+  background: var(--terminal-text);
+  color: var(--terminal-bg);
+}
+
+.keyboard-key.space {
+  flex: 1;
+  max-width: 200px;
+}
+
+/* Responsive Layouts */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+  
+  .gatekeeper {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .password-form {
+    flex-direction: column;
+  }
+  
+  .chat-container {
+    height: calc(100vh - 200px);
+    padding: 10px;
+  }
+  
+  .auth-card {
+    padding: 20px;
+    margin: 10px;
+  }
+  
+  .terminal-titlebar {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+  
+  .terminal-btn {
+    width: 14px;
+    height: 14px;
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 110%;
+  }
+  
+  .logo {
+    font-size: 24px;
+  }
+  
+  .auth-title {
+    font-size: 18px;
+  }
+  
+  .page-title {
+    font-size: 18px;
+  }
+  
+  .gatekeeper-sprite {
+    width: 60px;
+    height: 60px;
+  }
+}

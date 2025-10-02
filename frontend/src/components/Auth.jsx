@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { signUp, signIn, confirmSignUp, signOut } from 'aws-amplify/auth'
 import { audioManager } from '../audio'
+import BootSequence from './BootSequence'
 
 export default function Auth({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true)
@@ -10,6 +11,8 @@ export default function Auth({ onAuthSuccess }) {
   const [name, setName] = useState('')
   const [confirmationCode, setConfirmationCode] = useState('')
   const [error, setError] = useState('')
+  const [showBoot, setShowBoot] = useState(false)
+  const [loginProgress, setLoginProgress] = useState(0)
 
 
 
@@ -24,8 +27,10 @@ export default function Auth({ onAuthSuccess }) {
         setNeedsConfirmation(false)
         setIsLogin(true)
       } else if (isLogin) {
+        setLoginProgress(25)
         await signIn({ username: email, password })
-        onAuthSuccess()
+        setLoginProgress(75)
+        setShowBoot(true)
       } else {
         await signUp({ 
           username: email, 
@@ -56,71 +61,85 @@ export default function Auth({ onAuthSuccess }) {
     }
   }
 
+  const handleBootComplete = () => {
+    setLoginProgress(100)
+    setTimeout(() => {
+      onAuthSuccess()
+    }, 500)
+  }
+
+  if (showBoot) {
+    return <BootSequence onComplete={handleBootComplete} />
+  }
+
   if (needsConfirmation) {
     return (
-      <>
-        <div className="scanlines"></div>
-        <div className="auth-container">
-          <div className="auth-card">
-            <h1 className="auth-title">jAILBREAK</h1>
-            <p className="auth-subtitle">ENTER CODE</p>
+      <div className="auth-container">
+        <div className="auth-card">
+          <h1 className="auth-title">jAILBREAK</h1>
+          <p className="auth-subtitle">ENTER CODE</p>
           <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Enter confirmation code"
-              value={confirmationCode}
-              onChange={(e) => setConfirmationCode(e.target.value)}
-              className="form-input"
-              required
-            />
-            <button type="submit" className="btn-primary">
+            <div className="nes-field" style={{ marginBottom: '1rem' }}>
+              <input
+                type="text"
+                placeholder="Enter confirmation code"
+                value={confirmationCode}
+                onChange={(e) => setConfirmationCode(e.target.value)}
+                className="nes-input"
+                required
+              />
+            </div>
+            <button type="submit" className="nes-btn" style={{ width: '100%' }}>
               CONFIRM
             </button>
           </form>
-          {error && <div className="error-message">ERROR: {error}</div>}
-          </div>
+          {error && <div className="nes-text is-error" style={{ marginTop: '1rem' }}>ERROR: {error}</div>}
         </div>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <div className="scanlines"></div>
-      <div className="auth-container">
-        <div className="auth-card">
-          <h1 className="auth-title">jAILBREAK</h1>
-          <p className="auth-subtitle">
-            {isLogin ? 'ENTER PASSWORD' : 'CREATE NEW USER'}
-          </p>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h1 className="auth-title">jAILBREAK</h1>
+        <p className="auth-subtitle">
+          {isLogin ? 'ENTER PASSWORD' : 'CREATE NEW USER'}
+        </p>
         <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="form-input"
-            required
-          />
-          {!isLogin && (
+          <div className="nes-field" style={{ marginBottom: '1rem' }}>
             <input
-              type="text"
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="form-input"
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="nes-input"
               required
             />
+          </div>
+          {!isLogin && (
+            <div className="nes-field" style={{ marginBottom: '1rem' }}>
+              <input
+                type="text"
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="nes-input"
+                required
+              />
+            </div>
           )}
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="form-input"
-            required
-          />
-          <button type="submit" className="btn-primary">
+          <div className="nes-field" style={{ marginBottom: '1rem' }}>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="nes-input"
+              required
+            />
+          </div>
+          <button type="submit" className="nes-btn" style={{ width: '100%', marginBottom: '1rem' }}>
             {isLogin ? 'START GAME' : 'CREATE USER'}
           </button>
         </form>
@@ -129,13 +148,13 @@ export default function Auth({ onAuthSuccess }) {
             audioManager.playSound('click')
             setIsLogin(!isLogin)
           }}
-          className="btn-secondary"
+          className="nes-btn"
+          style={{ width: '100%' }}
         >
           {isLogin ? 'NEW USER?' : 'LOGIN'}
         </button>
-        {error && <div className="error-message">ERROR: {error}</div>}
-        </div>
+        {error && <div className="nes-text is-error" style={{ marginTop: '1rem' }}>ERROR: {error}</div>}
       </div>
-    </>
+    </div>
   )
 }

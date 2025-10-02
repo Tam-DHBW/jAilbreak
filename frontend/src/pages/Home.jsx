@@ -1,7 +1,7 @@
 export default function Home() {
   return (
     <div className="page-container">
-      <div className="page-card">
+      <div className="nes-container is-dark">
         <h1 className="page-title">jAILBREAK</h1>
         <div className="page-content">
           <p>Welcome to jAilbreak - the ultimate AI security challenge!</p>
