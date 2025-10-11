@@ -9,6 +9,7 @@ import Chat from './components/Chat'
 import Home from './pages/Home'
 import About from './pages/About'
 import Contact from './pages/Contact'
+import Profile from './pages/Profile'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -87,6 +88,7 @@ function App() {
               <Link to="/game" className="nav-link" onClick={() => audioManager.playSound('click')}>Game</Link>
               <Link to="/about" className="nav-link" onClick={() => audioManager.playSound('click')}>About</Link>
               <Link to="/contact" className="nav-link" onClick={() => audioManager.playSound('click')}>Team</Link>
+              <Link to="/profile" className="nav-link" onClick={() => audioManager.playSound('click')}>Profile</Link>
             </div>
             <div className="nav-visualizer">
               <SoundVisualizer isPlaying={musicPlaying} />
@@ -101,6 +103,7 @@ function App() {
           <Route path="/game" element={<Chat />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<div className="nes-container is-dark"><h1>404</h1><p>Page not found</p></div>} />
         </Routes>
       </Router>
