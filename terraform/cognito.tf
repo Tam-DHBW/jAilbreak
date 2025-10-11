@@ -37,6 +37,11 @@ resource "aws_cognito_user_pool_client" "frontend" {
     "ALLOW_USER_SRP_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH"
   ]
+  token_validity_units {
+    access_token  = "minutes"
+    id_token      = "minutes"
+    refresh_token = "days"
+  }
 }
 
 resource "aws_cognito_identity_pool" "players" {
