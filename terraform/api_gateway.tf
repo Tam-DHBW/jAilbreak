@@ -18,14 +18,21 @@ resource "aws_api_gateway_rest_api" "rest_api" {
     components = {
       securitySchemes = {
         cognito-authorizer = {
-          type                         = "apiKey",
-          name                         = "Authorization",
-          in                           = "header",
-          x-amazon-apigateway-authtype = "cognito_user_pools",
+          type = "apiKey",
+          name = "Authorization",
+          in   = "header",
+          x-amazon-apigateway-authtype = "custom",
           x-amazon-apigateway-authorizer = {
-            type         = "cognito_user_pools",
-            providerARNs = [aws_cognito_user_pool.players.arn]
+            type          = "token",
+            authorizerUri = aws_lambda_function.authorizer.invoke_arn
           }
+        }
+      }
+    }
+    x-amazon-apigateway-gateway-responses = {
+      ACCESS_DENIED = {
+        responseTemplates = {
+          "application/json" = jsonencode({ message = "$context.authorizer.message" })
         }
       }
     }
@@ -93,7 +100,7 @@ resource "aws_api_gateway_deployment" "rest_api" {
   rest_api_id = aws_api_gateway_rest_api.rest_api.id
 
   triggers = {
-    redeployment =  jsonencode([
+    redeployment = jsonencode([
       aws_api_gateway_rest_api.rest_api.body,
       aws_api_gateway_integration.notfound,
       aws_api_gateway_method_response.notfound,

@@ -1,0 +1,20 @@
+[package]
+name = "jb_authorizer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio.workspace = true
+lambda_runtime.workspace = true
+aws_lambda_events.workspace = true
+serde_json.workspace = true
+alcoholic_jwt.workspace = true
+anyhow.workspace = true
+minreq.workspace = true
+minreq.features = ["https-native", "json-using-serde"]
+
+jb_common.workspace = true
+
+[package.metadata.lambda.deploy]
+name = "jb_authorizer"
+s3_key = "authorizer_cargo_lambda"
