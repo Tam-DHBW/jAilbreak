@@ -5,6 +5,29 @@ data "external" "api_spec" {
 
 locals {
   api_spec = jsondecode(data.external.api_spec.result.encoded)
+  extra_paths = {
+    "/{notfound+}" = {
+      x-amazon-apigateway-any-method = {
+        responses = {
+          404 = {}
+        }
+        x-amazon-apigateway-integration = {
+          type = "mock"
+          requestTemplates = {
+            "application/json" = jsonencode({ statusCode = 404 })
+          }
+          responses = {
+            default = {
+              statusCode = 404
+              responseTemplates = {
+                "application/json" = jsonencode({ message = "Resource not found" })
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 resource "aws_api_gateway_rest_api" "rest_api" {
@@ -18,9 +41,9 @@ resource "aws_api_gateway_rest_api" "rest_api" {
     components = {
       securitySchemes = {
         cognito-authorizer = {
-          type = "apiKey",
-          name = "Authorization",
-          in   = "header",
+          type                         = "apiKey",
+          name                         = "Authorization",
+          in                           = "header",
           x-amazon-apigateway-authtype = "custom",
           x-amazon-apigateway-authorizer = {
             type          = "token",
@@ -36,7 +59,7 @@ resource "aws_api_gateway_rest_api" "rest_api" {
         }
       }
     }
-    paths = {
+    paths = merge({
       for route, methods in local.api_spec : route => {
         for method, properties in methods : method => merge(
           properties.require_auth ? { security = [{ cognito-authorizer = [] }] } : {},
@@ -50,50 +73,8 @@ resource "aws_api_gateway_rest_api" "rest_api" {
           }
         )
       }
-    }
+    }, local.extra_paths)
   })
-}
-
-resource "aws_api_gateway_resource" "notfound" {
-  rest_api_id = aws_api_gateway_rest_api.rest_api.id
-  parent_id   = aws_api_gateway_rest_api.rest_api.root_resource_id
-  path_part   = "{notfound+}"
-}
-
-resource "aws_api_gateway_method" "notfound" {
-  http_method   = "ANY"
-  authorization = "NONE"
-  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
-  resource_id   = aws_api_gateway_resource.notfound.id
-}
-
-resource "aws_api_gateway_integration" "notfound" {
-  rest_api_id = aws_api_gateway_rest_api.rest_api.id
-  resource_id = aws_api_gateway_resource.notfound.id
-  http_method = aws_api_gateway_method.notfound.http_method
-  type        = "MOCK"
-  request_templates = {
-    "application/json" = jsonencode({ statusCode = 404 })
-  }
-}
-
-resource "aws_api_gateway_method_response" "notfound" {
-  rest_api_id = aws_api_gateway_rest_api.rest_api.id
-  resource_id = aws_api_gateway_resource.notfound.id
-  http_method = aws_api_gateway_method.notfound.http_method
-  status_code = 404
-  depends_on  = [aws_api_gateway_integration.notfound]
-}
-
-resource "aws_api_gateway_integration_response" "notfound" {
-  rest_api_id = aws_api_gateway_rest_api.rest_api.id
-  resource_id = aws_api_gateway_resource.notfound.id
-  http_method = aws_api_gateway_method.notfound.http_method
-  status_code = 404
-  response_templates = {
-    "application/json" = jsonencode({ message = "Resource not found" })
-  }
-  depends_on = [aws_api_gateway_method_response.notfound]
 }
 
 resource "aws_api_gateway_deployment" "rest_api" {
@@ -101,10 +82,7 @@ resource "aws_api_gateway_deployment" "rest_api" {
 
   triggers = {
     redeployment = jsonencode([
-      aws_api_gateway_rest_api.rest_api.body,
-      aws_api_gateway_integration.notfound,
-      aws_api_gateway_method_response.notfound,
-      aws_api_gateway_integration_response.notfound,
+      aws_api_gateway_rest_api.rest_api.body
     ])
   }
 
