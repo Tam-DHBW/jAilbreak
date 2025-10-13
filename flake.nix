@@ -25,6 +25,7 @@
             rust-analyzer
             rustfmt
             cargo-lambda
+            nodejs
           ];
         };
       };
