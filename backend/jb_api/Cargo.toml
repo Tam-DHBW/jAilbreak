@@ -1,0 +1,19 @@
+[package]
+name = "jb_api"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+lambda_http.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
+axum.workspace = true
+preinterpret.workspace = true
+serde_json.workspace = true
+
+jb_common.workspace = true
+
+[package.metadata.lambda.deploy]
+binary_name = "api"
+name = "jb_api"
+s3_key = "api_cargo_lambda"

@@ -1,13 +1,14 @@
-use lambda_http::{tower::Layer, tracing::info};
+use jb_common::tracing::info;
+use lambda_http::{tower::Layer};
 use tower_http::normalize_path::NormalizePathLayer;
 
 #[tokio::main]
 async fn main() {
-    lambda_http::tracing::init_default_subscriber();
+    jb_common::init_tracing_subscriber();
 
     info!("Starting API lambda...");
 
-    let router = backend::create_router().layer(tower_http::trace::TraceLayer::new_for_http());
+    let router = jb_api::create_router().layer(tower_http::trace::TraceLayer::new_for_http());
     let router = NormalizePathLayer::append_trailing_slash().layer(router);
     lambda_http::run(router).await.unwrap();
 }
