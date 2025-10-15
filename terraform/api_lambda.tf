@@ -26,9 +26,28 @@ resource "aws_iam_role" "api_lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
+data "aws_iam_policy_document" "invoke_bedrock" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "bedrock:InvokeInlineAgent",
+      "bedrock:GetSession",
+      "bedrock:CreateSession",
+      "bedrock:InvokeModel",
+      "bedrock:GetFoundationModel",
+      "bedrock:ListFoundationModels"
+    ]
+    resources = ["*"]
+  }
+}
+
 resource "aws_iam_role_policy" "api_lambda_logging" {
+  for_each = toset([
+    data.aws_iam_policy_document.lambda_logging.json,
+    data.aws_iam_policy_document.invoke_bedrock.json,
+  ])
   role   = aws_iam_role.api_lambda_role.id
-  policy = data.aws_iam_policy_document.lambda_logging.json
+  policy = each.key
 }
 
 resource "aws_lambda_function" "api" {

@@ -1,4 +1,3 @@
-//#[macro_export]
 macro_rules! api_routes {
     ( $( [ $( $route_stop:tt ),* ] {
         $( $method:ident $auth:tt-> $handler:expr; )*
@@ -22,18 +21,11 @@ macro_rules! api_routes {
             }));
         }
 
-        pub fn create_router() -> axum::Router {
-            use axum::{Router, routing::MethodRouter};
-
-            Router::new()
+        pub fn create_router() -> axum::Router<crate::State> {
+            axum::Router::new()
                 $(
                     [!set! #route = api_routes!(@route $( $route_stop ),*)]
-                    .route(#route, {
-                        MethodRouter::new()
-                            $(
-                                .[!ident! [!lower! $method]]($handler)
-                            )*
-                    })
+                    .route(#route, axum::routing::$( [!ident! [!lower! $method]]($handler) ).*)
                 )*
         }
     } };

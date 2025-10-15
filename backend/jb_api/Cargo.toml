@@ -5,11 +5,17 @@ edition = "2024"
 
 [dependencies]
 lambda_http.workspace = true
+aws-config.workspace = true
+aws-smithy-http-client.workspace = true
+aws-sdk-bedrockagentruntime.workspace = true
 tokio.workspace = true
 tower-http.workspace = true
 axum.workspace = true
 preinterpret.workspace = true
+serde.workspace = true
 serde_json.workspace = true
+anyhow.workspace = true
+indoc.workspace = true
 
 jb_common.workspace = true
 

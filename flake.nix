@@ -25,6 +25,8 @@
             rust-analyzer
             rustfmt
             cargo-lambda
+            pkg-config
+            openssl
           ];
         };
       };

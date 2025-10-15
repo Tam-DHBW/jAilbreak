@@ -1,14 +1,11 @@
-use lambda_http::RequestExt;
+mod level;
 
 api_routes! {
-    ["abc", "def"] {
-        GET --> async || { "Hello" };
-        POST |-> async || { "World" };
+    ["ping"] {
+        GET --> async || { "Pong" };
+        POST |-> async || { "Pong Authorized" };
     }
-    ["user", (id: u8), "profile"] {
-        GET --> async |axum::extract::Path(id): axum::extract::Path<u8>| { format!("Hello user with id {id}") };
-    }
-    ["me"] {
-        GET |-> async |req: axum::extract::Request| { format!("Hello {sub}", sub = req.request_context().authorizer().unwrap().fields["sub"].as_str().unwrap()) };
+    ["level", (level_id: String), "chat", (session_id: String)] {
+        POST |-> level::chat::chat_session;
     }
 }
