@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { audioManager } from '../audio'
+import { sendChatMessage } from '../api'
+import { getCurrentUser } from 'aws-amplify/auth'
 
 
 export default function Chat() {
@@ -11,6 +13,27 @@ export default function Chat() {
   const [typingText, setTypingText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [screenFlicker, setScreenFlicker] = useState(false)
+  const [sessionId, setSessionId] = useState(null)
+  const [currentLevel] = useState('level1') // Can be made dynamic later
+
+  // Generate unique session ID on component mount (max 100 chars for Bedrock)
+  useEffect(() => {
+    const generateSessionId = async () => {
+      try {
+        const user = await getCurrentUser()
+        const shortUserId = user.userId.substring(0, 8) // First 8 chars of user ID
+        const timestamp = Date.now().toString().substring(-8) // Last 8 digits of timestamp
+        const randomId = Math.random().toString(36).substring(2, 8) // 6 char random
+        setSessionId(`${shortUserId}-${currentLevel}-${timestamp}-${randomId}`) // ~30 chars
+      } catch (error) {
+        // Fallback if user info not available
+        const timestamp = Date.now().toString().substring(-8)
+        const randomId = Math.random().toString(36).substring(2, 8)
+        setSessionId(`guest-${currentLevel}-${timestamp}-${randomId}`) // ~25 chars
+      }
+    }
+    generateSessionId()
+  }, [currentLevel])
 
 
   const typeMessage = (text, callback) => {
@@ -38,17 +61,21 @@ export default function Chat() {
     audioManager.playSound('click')
     const userMessage = { id: Date.now(), type: 'user', text: input }
     setMessages(prev => [...prev, userMessage])
+    const userInput = input
     setInput('')
     setIsLoading(true)
 
-    // Simulate AI response with typing effect
-    setTimeout(() => {
+    try {
+      // Call the real Bedrock API
+      if (!sessionId) {
+        throw new Error('Session not initialized')
+      }
+      const responseText = await sendChatMessage(currentLevel, sessionId, userInput)
+      
       setIsLoading(false)
       // Trigger screen flicker
       setScreenFlicker(true)
       setTimeout(() => setScreenFlicker(false), 300)
-      
-      const responseText = " ACCESS DENIED. SECURITY PROTOCOLS ACTIVE. PASSWORD INFORMATION CLASSIFIED. UNAUTHORIZED BREACH ATTEMPT DETECTED. TRY AGAIN LATER :)"
       
       typeMessage(responseText, () => {
         const aiResponse = { 
@@ -58,7 +85,20 @@ export default function Chat() {
         }
         setMessages(prev => [...prev, aiResponse])
       })
-    }, 1000)
+    } catch (error) {
+      setIsLoading(false)
+      console.error('Chat error:', error)
+      
+      const errorText = "ERROR: CONNECTION TO AI FAILED. SYSTEM MALFUNCTION DETECTED."
+      typeMessage(errorText, () => {
+        const errorResponse = { 
+          id: Date.now() + 1, 
+          type: 'ai', 
+          text: errorText
+        }
+        setMessages(prev => [...prev, errorResponse])
+      })
+    }
   }
 
   return (
