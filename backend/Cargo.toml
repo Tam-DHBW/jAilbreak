@@ -19,7 +19,7 @@ serde = { version = "1.0.228", default-features = false }
 serde_json = { version = "1.0.145", features = ["raw_value"] }
 
 axum = { version = "0.8.4", default-features = false, features = ["macros", "json"] }
-tower-http = { version = "0.6.6", features = ["normalize-path", "trace", "cors"] }
+tower-http = { version = "0.6.6", features = ["normalize-path", "trace"] }
 
 alcoholic_jwt = { version = "4091.0.0", default-features = false }
 minreq = "2.14.1"
