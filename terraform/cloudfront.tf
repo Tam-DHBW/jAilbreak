@@ -11,6 +11,10 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
   name = "Managed-AllViewerExceptHostHeader"
 }
 
+data "aws_cloudfront_response_headers_policy" "cors_with_preflight" {
+  name = "Managed-CORS-With-Preflight"
+}
+
 resource "aws_cloudfront_origin_access_control" "frontend_oac" {
   name                              = "jb_oac"
   origin_access_control_origin_type = "s3"
@@ -80,6 +84,8 @@ resource "aws_cloudfront_distribution" "public" {
     target_origin_id         = local.origin_api_id
     cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.cors_with_preflight.id
+    
     allowed_methods          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods           = ["GET", "HEAD"]
     viewer_protocol_policy   = "redirect-to-https"
