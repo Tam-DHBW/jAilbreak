@@ -7,6 +7,7 @@ use tower_http::normalize_path::NormalizePathLayer;
 #[macro_use]
 mod macros;
 mod auth;
+mod response;
 mod routes;
 
 pub use routes::generate_terraform;
@@ -30,9 +31,7 @@ pub async fn run() {
             .build_https()
     };
 
-    let sdk_config = aws_config::from_env()
-        .http_client(http_client)
-        .load().await;
+    let sdk_config = aws_config::from_env().http_client(http_client).load().await;
 
     let bedrockagent = aws_sdk_bedrockagentruntime::Client::new(&sdk_config);
 
