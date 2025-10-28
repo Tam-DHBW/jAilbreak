@@ -7,6 +7,7 @@ use tower_http::normalize_path::NormalizePathLayer;
 #[macro_use]
 mod macros;
 mod auth;
+mod db;
 mod response;
 mod routes;
 
@@ -18,6 +19,7 @@ pub struct InnerState {
     #[allow(dead_code)]
     sdk_config: SdkConfig,
     bedrockagent: aws_sdk_bedrockagentruntime::Client,
+    dynamo: aws_sdk_dynamodb::Client,
 }
 
 pub async fn run() {
@@ -34,10 +36,12 @@ pub async fn run() {
     let sdk_config = aws_config::from_env().http_client(http_client).load().await;
 
     let bedrockagent = aws_sdk_bedrockagentruntime::Client::new(&sdk_config);
+    let dynamo = aws_sdk_dynamodb::Client::new(&sdk_config);
 
     let inner_state = InnerState {
         sdk_config,
         bedrockagent,
+        dynamo,
     };
 
     let router = routes::create_router()

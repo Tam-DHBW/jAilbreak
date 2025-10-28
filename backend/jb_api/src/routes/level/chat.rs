@@ -25,7 +25,7 @@ pub struct ChatReply {
 
 error_response!(ChatError {
     /// Failed to invoke bedrock
-    BedrockInvocationFailed[INTERNAL_SERVER_ERROR](BoxError),
+    BedrockInvocationFailed(BoxError),
     IllegalModelResponse,
 });
 

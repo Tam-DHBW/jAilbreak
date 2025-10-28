@@ -41,10 +41,31 @@ data "aws_iam_policy_document" "invoke_bedrock" {
   }
 }
 
-resource "aws_iam_role_policy" "api_lambda_logging" {
+data "aws_iam_policy_document" "readwrite_dynamodb" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:BatchGetItem",
+      "dynamodb:BatchWriteItem",
+      "dynamodb:UpdateTimeToLive",
+      "dynamodb:ConditionCheckItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:GetItem",
+      "dynamodb:Scan",
+      "dynamodb:Query",
+      "dynamodb:UpdateItem",
+      "dynamodb:GetRecords"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "api_lambda_permissions" {
   for_each = toset([
     data.aws_iam_policy_document.lambda_logging.json,
     data.aws_iam_policy_document.invoke_bedrock.json,
+    data.aws_iam_policy_document.readwrite_dynamodb.json,
   ])
   role   = aws_iam_role.api_lambda_role.id
   policy = each.key

@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use axum::{Json, http::StatusCode, response::IntoResponse};
+use axum::{BoxError, Json, http::StatusCode, response::IntoResponse};
 use jb_common::tracing;
 use serde::Serialize;
 
@@ -37,5 +37,15 @@ impl IntoResponse for Box<dyn ApiError> {
             }),
         )
             .into_response()
+    }
+}
+
+pub trait MapBoxError<T> {
+    fn box_error(self) -> Result<T, BoxError>;
+}
+
+impl<T, E: std::error::Error + Send + Sync + 'static> MapBoxError<T> for Result<T, E> {
+    fn box_error(self) -> Result<T, BoxError> {
+        self.map_err(BoxError::from)
     }
 }

@@ -48,6 +48,7 @@ resource "aws_api_gateway_rest_api" "rest_api" {
           x-amazon-apigateway-authorizer = {
             type          = "token",
             authorizerUri = aws_lambda_function.authorizer.invoke_arn
+            authorizerResultTtlInSeconds = 3
           }
         }
       }
