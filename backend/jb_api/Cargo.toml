@@ -26,3 +26,6 @@ jb_common.workspace = true
 binary_name = "api"
 name = "jb_api"
 s3_key = "api_cargo_lambda"
+
+[features]
+local-testing = ["jb_common/local-testing", "lambda_http/apigw_http", "aws-config/sso"]

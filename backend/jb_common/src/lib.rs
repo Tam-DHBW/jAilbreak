@@ -11,7 +11,7 @@ pub fn init_tracing_subscriber() {
         .unwrap();
 
     let subscriber = tracing_subscriber::fmt()
-        .with_ansi(false)
+        .with_ansi(cfg!(feature = "local-testing"))
         .with_target(false)
         .without_time()
         .with_max_level(log_level);

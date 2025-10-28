@@ -4,7 +4,7 @@ mod prompt;
 api_routes! {
     ["ping"] {
         GET --> async || { "Pong" };
-        POST |-> async || { "Pong Authorized" };
+        POST |-> async |user: crate::auth::AuthorizedUser| { format!("Pong Authorized, hello {}", user.sub()) };
     }
     ["level", (level_id: String), "chat", (session_id: String)] {
         POST |-> level::chat::chat_session;
@@ -20,4 +20,4 @@ api_routes! {
     }
 }
 
-    // TODO path component macro
+// TODO path component macro

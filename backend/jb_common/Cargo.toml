@@ -7,3 +7,6 @@ edition = "2024"
 tracing.workspace = true
 tracing-subscriber.workspace = true
 tracing-subscriber.features = ["fmt", "json"]
+
+[features]
+local-testing = ["tracing-subscriber/ansi"]

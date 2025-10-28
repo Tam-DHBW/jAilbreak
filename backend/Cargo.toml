@@ -40,6 +40,11 @@ output_format = "zip"
 [workspace.metadata.lambda.deploy]
 s3_bucket = "jb-lambda-code-archives"
 
+[workspace.metadata.lambda.watch]
+bin = ["api"]
+features = ["local-testing"]
+
+
 [profile.dev]
 opt-level = "z"
 strip = true

@@ -34,6 +34,22 @@ pub async fn run() {
     };
 
     let sdk_config = aws_config::from_env().http_client(http_client).load().await;
+    
+    #[cfg(feature = "local-testing")]
+    {
+        use aws_sdk_dynamodb::config::ProvideCredentials;
+        if let Err(_) = sdk_config
+            .credentials_provider()
+            .unwrap()
+            .provide_credentials()
+            .await
+        {
+            jb_common::tracing::error!(
+                "Credentials loaded from environment are not valid. Shutting down"
+            );
+            return;
+        }
+    }
 
     let bedrockagent = aws_sdk_bedrockagentruntime::Client::new(&sdk_config);
     let dynamo = aws_sdk_dynamodb::Client::new(&sdk_config);

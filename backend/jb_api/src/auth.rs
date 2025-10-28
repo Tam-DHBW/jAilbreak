@@ -43,6 +43,20 @@ impl<S: Sync + Send> OptionalFromRequestParts<S> for AuthorizedUser {
         parts: &mut axum::http::request::Parts,
         _: &S,
     ) -> Result<Option<Self>, Self::Rejection> {
+        #[cfg(feature = "local-testing")]
+        {
+            use axum::http::HeaderValue;
+            if let Some(Ok(sub)) = parts
+                .headers
+                .get("JAILBREAK_USER_SUB")
+                .map(HeaderValue::to_str)
+            {
+                return Ok(Some(AuthorizedUser {
+                    sub: sub.to_owned(),
+                }));
+            }
+        }
+
         Ok(parts
             .request_context_ref()
             .and_then(|context| context.authorizer())
