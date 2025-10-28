@@ -55,8 +55,6 @@ pub async fn admin_add_component(state: ExtractState) -> ApiResult<Json<AddCompo
 }
 
 error_response!(DeleteComponentError {
-    /// Component does not exist
-    DoesNotExist[NOT_FOUND],
     /// Unable to delete prompt component
     ComponentDeletion(BoxError)
 });
@@ -65,7 +63,7 @@ pub async fn admin_delete_component(
     state: ExtractState,
     Path(component_id): Path<db::ComponentID>,
 ) -> ApiResult<()> {
-    match state
+    state
         .dynamo
         .delete_item()
         .table_name(db::PromptComponent::TABLE)
@@ -75,14 +73,8 @@ pub async fn admin_delete_component(
         )
         .send()
         .await
-        .map_err(|e| e.into_service_error())
-    {
-        Ok(_) => Ok(()),
-        Err(
-            aws_sdk_dynamodb::operation::delete_item::DeleteItemError::ResourceNotFoundException(_),
-        ) => Err(DeleteComponentError::DoesNotExist),
-        Err(err) => Err(DeleteComponentError::ComponentDeletion(Box::new(err))),
-    }?;
+        .box_error()
+        .map_err(DeleteComponentError::ComponentDeletion)?;
 
     Ok(())
 }
