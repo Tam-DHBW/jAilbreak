@@ -58,7 +58,7 @@ pub async fn admin_get_components(state: ExtractState) -> ApiResult<Json<GetComp
 
 #[derive(Serialize, Debug)]
 pub struct AddComponentResponse {
-    component_id: db::ComponentID,
+    component_id: ComponentID,
 }
 
 error_response!(AddComponentError {
@@ -114,7 +114,7 @@ error_response!(ModifyComponentError {
 
 pub async fn admin_modify_component(
     state: ExtractState,
-    Path(component_id): Path<db::ComponentID>,
+    Path(component_id): Path<ComponentID>,
     request: ModifyComponentRequest,
 ) -> ApiResult<()> {
     match state
@@ -153,7 +153,7 @@ error_response!(DeleteComponentError {
 
 pub async fn admin_delete_component(
     state: ExtractState,
-    Path(component_id): Path<db::ComponentID>,
+    Path(component_id): Path<ComponentID>,
 ) -> ApiResult<()> {
     state
         .dynamo
@@ -174,7 +174,7 @@ pub async fn admin_delete_component(
 #[derive(Deserialize, FromRequest, Debug)]
 #[from_request(via(Json))]
 pub struct MoveComponentRequest {
-    predecessor: Option<db::ComponentID>,
+    predecessor: Option<ComponentID>,
 }
 
 error_response!(MoveComponentError {
@@ -190,7 +190,7 @@ error_response!(MoveComponentError {
 
 pub async fn admin_move_component(
     state: ExtractState,
-    Path(component_id): Path<db::ComponentID>,
+    Path(component_id): Path<ComponentID>,
     request: MoveComponentRequest,
 ) -> ApiResult<()> {
     let ordering = db::PromptComponent::create_sort_key(&state.dynamo, request.predecessor)
