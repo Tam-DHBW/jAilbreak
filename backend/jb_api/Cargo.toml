@@ -19,6 +19,7 @@ serde_dynamo.workspace = true
 anyhow.workspace = true
 indoc.workspace = true
 futures.workspace = true
+itertools.workspace = true
 
 jb_common.workspace = true
 

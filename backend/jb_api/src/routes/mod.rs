@@ -1,4 +1,4 @@
-mod level;
+mod levels;
 mod prompt;
 
 api_routes! {
@@ -6,8 +6,19 @@ api_routes! {
         GET --> async || { "Pong" };
         POST |-> async |user: crate::auth::AuthorizedUser| { format!("Pong Authorized, hello {}", user.sub()) };
     }
+    ["levels"] {
+        GET |-> levels::get_levels;
+    }
     ["levels", (level_id), "chat", (session_id)] {
-        POST |-> level::chat::chat_session;
+        POST |-> levels::chat::chat_session;
+    }
+    ["admin", "levels"] {
+        GET |-> levels::admin::admin_get_levels;
+        POST |-> levels::admin::admin_create_level;
+    }
+    ["admin", "levels", (level_id)] {
+        PATCH |-> levels::admin::admin_modify_level;
+        DELETE |-> levels::admin::admin_delete_level;
     }
     ["admin", "prompt", "components"] {
         GET |-> prompt::admin_get_components;

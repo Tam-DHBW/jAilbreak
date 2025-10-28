@@ -30,6 +30,7 @@ futures =  { version = "0.3", default-features = false, features = ["std"] }
 anyhow = "1"
 preinterpret = "0.2"
 indoc = "2"
+itertools = "0.14.0"
 
 jb_common = { path = "./jb_common" }
 
