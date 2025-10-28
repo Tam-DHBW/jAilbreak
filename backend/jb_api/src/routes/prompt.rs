@@ -125,10 +125,13 @@ pub async fn admin_move_component(
         .update_expression("SET #sort = :sort")
         .expression_attribute_names("#sort", db::PromptComponent::SECONDARY_TEMPLATE_ORDERING)
         .expression_attribute_values(":sort", AttributeValue::S(ordering))
+        .condition_expression("#pk = :pk")
+        .expression_attribute_names("#pk", db::PromptComponent::PARTITION)
+        .expression_attribute_values(":pk", AttributeValue::N(component_id.0.to_string()))
         .send()
         .await
         .map_err(|err| match err.into_service_error() {
-            UpdateItemError::ResourceNotFoundException(_) => MoveComponentError::DoesNotExist,
+            UpdateItemError::ConditionalCheckFailedException(_) => MoveComponentError::DoesNotExist,
             err => MoveComponentError::UpdatePosition(Box::new(err)),
         })?;
 
