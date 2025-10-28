@@ -4,7 +4,8 @@ use axum::{BoxError, Json, http::StatusCode, response::IntoResponse};
 use jb_common::tracing;
 use serde::Serialize;
 
-pub type ApiResult<T> = Result<T, Box<dyn ApiError>>;
+pub type ApiResult<T> = Result<T, BoxApiError>;
+pub type BoxApiError = Box<dyn ApiError>;
 
 pub trait ApiError: Debug {
     fn error_type(&self) -> &'static str;
@@ -12,7 +13,7 @@ pub trait ApiError: Debug {
     fn status_code(&self) -> StatusCode;
 }
 
-impl IntoResponse for Box<dyn ApiError> {
+impl IntoResponse for BoxApiError {
     fn into_response(self) -> axum::response::Response {
         if self.status_code().is_server_error() {
             tracing::error!(

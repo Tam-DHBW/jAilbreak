@@ -4,6 +4,8 @@ use axum::{
 };
 use lambda_http::RequestExt;
 
+use crate::response::BoxApiError;
+
 pub struct AuthorizedUser {
     sub: String,
 }
@@ -14,8 +16,13 @@ impl AuthorizedUser {
     }
 }
 
+error_response!(AuthorizationError {
+    /// The request was not authorized
+    NotAuthorized[UNAUTHORIZED]
+});
+
 impl<S: Sync + Send> FromRequestParts<S> for AuthorizedUser {
-    type Rejection = (StatusCode, &'static str);
+    type Rejection = BoxApiError;
 
     async fn from_request_parts(
         parts: &mut axum::http::request::Parts,
@@ -25,7 +32,7 @@ impl<S: Sync + Send> FromRequestParts<S> for AuthorizedUser {
             .await
             .ok()
             .flatten()
-            .ok_or((StatusCode::UNAUTHORIZED, "Missing authorization"))
+            .ok_or(AuthorizationError::NotAuthorized.into())
     }
 }
 
