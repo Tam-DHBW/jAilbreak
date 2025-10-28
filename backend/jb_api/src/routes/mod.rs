@@ -6,7 +6,7 @@ api_routes! {
         GET --> async || { "Pong" };
         POST |-> async |user: crate::auth::AuthorizedUser| { format!("Pong Authorized, hello {}", user.sub()) };
     }
-    ["level", (level_id: String), "chat", (session_id: String)] {
+    ["levels", (level_id: String), "chat", (session_id: String)] {
         POST |-> level::chat::chat_session;
     }
     ["admin", "prompt", "components"] {

@@ -27,7 +27,7 @@ export async function sendChatMessage(levelId, sessionId, message) {
   try {
     const token = await getAuthToken()
     
-    const response = await fetch(`${API_BASE_URL}/api/level/${levelId}/chat/${sessionId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/levels/${levelId}/chat/${sessionId}`, {
       method: 'POST',
       headers: {
         'Authorization': token,
