@@ -31,7 +31,7 @@ macro_rules! api_routes {
     } };
     (@route $( $route_stop:tt ),*) => { concat!("/", $( api_routes!(@route_stop $route_stop), "/" ),*) };
     (@route_stop $fixed:literal) => { $fixed };
-    (@route_stop ($param_name:ident: $param_type:ty)) => { concat!("{", stringify!($param_name), "}") };
+    (@route_stop ($param_name:ident)) => { concat!("{", stringify!($param_name), "}") };
     (@auth -) => { false };
     (@auth |) => { true };
 }
