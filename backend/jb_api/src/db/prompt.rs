@@ -29,9 +29,12 @@ pub struct PromptComponent {
 impl PromptComponent {
     pub const TABLE: &'static str = "jb_prompt_templates";
     pub const PARTITION: &'static str = "component_id";
+
     pub const SECONDARY_TEMPLATE_INDEX: &'static str = "template-index";
     pub const SECONDARY_TEMPLATE_ID: &'static str = "template_id";
     pub const SECONDARY_TEMPLATE_ORDERING: &'static str = "ordering";
+
+    pub const TEXT: &'static str = "text";
 
     pub async fn create_sort_key(
         client: &aws_sdk_dynamodb::Client,

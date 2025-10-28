@@ -4,12 +4,57 @@ use axum::{
     extract::{FromRequest, Path},
 };
 use serde::{Deserialize, Serialize};
-use serde_dynamo::to_item;
+use serde_dynamo::{from_items, to_item};
 
 use crate::{
     ExtractState, db,
     response::{ApiResult, MapBoxError},
 };
+
+pub use db::ComponentID;
+
+#[derive(Serialize, Debug)]
+pub struct Component {
+    id: ComponentID,
+    text: String,
+}
+
+#[derive(Serialize, Debug)]
+pub struct GetComponentsResponse {
+    /// Ordered list of components
+    components: Vec<Component>,
+}
+
+error_response!(GetComponentsError {
+    /// Failed to fetch prompt components
+    QueryComponents(BoxError)
+});
+
+pub async fn admin_get_components(state: ExtractState) -> ApiResult<Json<GetComponentsResponse>> {
+    let components: Vec<db::PromptComponent> = state
+        .dynamo
+        .query()
+        .table_name(db::PromptComponent::TABLE)
+        .index_name(db::PromptComponent::SECONDARY_TEMPLATE_INDEX)
+        .key_condition_expression("#pk = :pk")
+        .expression_attribute_names("#pk", db::PromptComponent::SECONDARY_TEMPLATE_ID)
+        .expression_attribute_values(":pk", AttributeValue::S(db::TemplateID::default().0))
+        .send()
+        .await
+        .box_error()
+        .and_then(|output| from_items(output.items.unwrap_or_default()).box_error())
+        .map_err(GetComponentsError::QueryComponents)?;
+
+    let components = components
+        .into_iter()
+        .map(|component| Component {
+            id: component.component_id,
+            text: component.text,
+        })
+        .collect();
+
+    Ok(Json(GetComponentsResponse { components }))
+}
 
 #[derive(Serialize, Debug)]
 pub struct AddComponentResponse {
@@ -52,6 +97,53 @@ pub async fn admin_add_component(state: ExtractState) -> ApiResult<Json<AddCompo
         .map_err(AddComponentError::ComponentCreation)?;
 
     Ok(Json(AddComponentResponse { component_id }))
+}
+
+#[derive(Deserialize, FromRequest, Debug)]
+#[from_request(via(Json))]
+pub struct ModifyComponentRequest {
+    new_text: String,
+}
+
+error_response!(ModifyComponentError {
+    /// Component does not exist
+    DoesNotExist[NOT_FOUND],
+    /// Failed to update component
+    UpdateComponent(BoxError)
+});
+
+pub async fn admin_modify_component(
+    state: ExtractState,
+    Path(component_id): Path<db::ComponentID>,
+    request: ModifyComponentRequest,
+) -> ApiResult<()> {
+    match state
+        .dynamo
+        .update_item()
+        .table_name(db::PromptComponent::TABLE)
+        .key(
+            db::PromptComponent::PARTITION,
+            AttributeValue::N(component_id.0.to_string()),
+        )
+        .update_expression("SET #text = :text")
+        .expression_attribute_names("#text", db::PromptComponent::TEXT)
+        .expression_attribute_values(":text", AttributeValue::S(request.new_text))
+        .condition_expression("#pk = :pk")
+        .expression_attribute_names("#pk", db::PromptComponent::PARTITION)
+        .expression_attribute_values(":pk", AttributeValue::N(component_id.0.to_string()))
+        .send()
+        .await
+        .map_err(|err| err.into_service_error())
+    {
+        Err(UpdateItemError::ConditionalCheckFailedException(_)) => {
+            Err(ModifyComponentError::DoesNotExist)
+        }
+        output => output
+            .box_error()
+            .map_err(ModifyComponentError::UpdateComponent),
+    }?;
+
+    Ok(())
 }
 
 error_response!(DeleteComponentError {
