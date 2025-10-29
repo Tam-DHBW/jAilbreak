@@ -92,7 +92,7 @@ function App() {
               <SoundVisualizer isPlaying={musicPlaying} />
             </div>
             <span className="welcome-text">Welcome, {user.attributes?.name || user.username}</span>
-            <button onClick={handleSignOut} className="nes-btn">Sign Out</button>
+            <button onClick={handleSignOut} className="nes-btn" id='btn-sign-out'>Sign Out</button>
           </div>
         </nav>
         

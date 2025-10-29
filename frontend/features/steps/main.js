@@ -1,18 +1,31 @@
-import { Given, When, Then, BeforeAll } from "cucumber"
+import { Given, When, Then, BeforeAll, AfterAll } from "cucumber"
 
-import { Builder, By, Capabilities, Key, WebElementCondition } from "selenium-webdriver";
+import { Builder, By, Capabilities, until } from "selenium-webdriver";
 
 const capabilities = Capabilities.firefox();
 const driver = new Builder().withCapabilities(capabilities).build();
 
-BeforeAll(async function () {
-    await driver.get("about:config")
+BeforeAll(async () => {
+  await driver.get("about:newtab")
 })
 
-Given("I am on google", async function () {
-    await driver.get("https://google.com/")
+Given("I am on jAilbreak", async () => {
+  await driver.get("https://d1ec4fqqusaq2g.cloudfront.net/")
 })
 
-Then("The search bar exists", async function () {
-    await driver.findElement(By.css('form[action="/search"] textarea'))
+Given("I am logged in", { timeout: -1 }, async () => {
+  const locator = By.id("btn-sign-out")
+  await driver.wait(until.elementLocated(locator))
+})
+
+When("I log out", async () => {
+  await driver.actions().click(await driver.findElement(By.id("btn-sign-out"))).perform()
+})
+
+Then("I am logged out", { timeout: 2000 }, async () => {
+  await driver.wait(until.elementLocated(By.css("input[type=email]")))
+})
+
+AfterAll(async () => {
+  await driver.close()
 })
