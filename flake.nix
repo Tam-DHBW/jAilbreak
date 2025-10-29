@@ -19,7 +19,9 @@
           packages = with pkgs; [ 
             awscli2 
             aws-sam-cli 
+
             terraform
+
             rustc
             cargo
             rust-analyzer
@@ -27,6 +29,9 @@
             cargo-lambda
             pkg-config
             openssl
+
+            nodejs
+            typescript
           ];
         };
       };
