@@ -1,6 +1,6 @@
 use aws_sdk_dynamodb::{operation::update_item::UpdateItemError, types::AttributeValue};
 use axum::{
-    BoxError, Json,
+    BoxError, Json, debug_handler,
     extract::{FromRequest, Path},
 };
 use itertools::Itertools;
@@ -8,7 +8,9 @@ use serde::Deserialize;
 use serde_dynamo::{aws_sdk_dynamodb_1::to_attribute_value, to_item};
 
 use crate::{
-    ExtractState, db,
+    ExtractState,
+    auth::AuthorizedAdmin,
+    db,
     response::{ApiResult, MapBoxError},
 };
 
@@ -26,7 +28,11 @@ error_response!(AdminGetLevelsError {
     QueryLevels(BoxError)
 });
 
-pub async fn admin_get_levels(state: ExtractState) -> ApiResult<Json<AdminGetLevelsResponse>> {
+#[debug_handler(state=crate::State)]
+pub async fn admin_get_levels(
+    _: AuthorizedAdmin,
+    state: ExtractState,
+) -> ApiResult<Json<AdminGetLevelsResponse>> {
     let levels: Vec<db::Level> = state
         .dynamo
         .scan()
@@ -57,6 +63,7 @@ error_response!(CreateLevelError {
 });
 
 pub async fn admin_create_level(
+    _: AuthorizedAdmin,
     state: ExtractState,
     request: CreateLevelRequest,
 ) -> ApiResult<Json<CreateLevelResponse>> {
@@ -102,6 +109,7 @@ error_response!(ModifyLevelError {
 });
 
 pub async fn admin_modify_level(
+    _: AuthorizedAdmin,
     state: ExtractState,
     Path(level_id): Path<LevelID>,
     request: ModifyLevelRequest,
@@ -182,6 +190,7 @@ error_response!(DeleteLevelError {
 });
 
 pub async fn admin_delete_level(
+    _: AuthorizedAdmin,
     state: ExtractState,
     Path(level_id): Path<LevelID>,
 ) -> ApiResult<()> {

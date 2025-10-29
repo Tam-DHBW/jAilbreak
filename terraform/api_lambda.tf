@@ -61,14 +61,27 @@ data "aws_iam_policy_document" "readwrite_dynamodb" {
   }
 }
 
+data "aws_iam_policy_document" "read_cognito" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "cognito-idp:AdminListGroupsForUser",
+      "cognito-idp:AdminGetUser"
+    ]
+    resources = ["*"]
+  }
+
+}
+
 resource "aws_iam_role_policy" "api_lambda_permissions" {
-  for_each = toset([
-    data.aws_iam_policy_document.lambda_logging.json,
-    data.aws_iam_policy_document.invoke_bedrock.json,
-    data.aws_iam_policy_document.readwrite_dynamodb.json,
-  ])
+  for_each = {
+    logging = data.aws_iam_policy_document.lambda_logging.json
+    bedrock = data.aws_iam_policy_document.invoke_bedrock.json
+    dynamodb = data.aws_iam_policy_document.readwrite_dynamodb.json
+    cognito = data.aws_iam_policy_document.read_cognito.json
+  }
   role   = aws_iam_role.api_lambda_role.id
-  policy = each.key
+  policy = each.value
 }
 
 resource "aws_lambda_function" "api" {
@@ -79,6 +92,7 @@ resource "aws_lambda_function" "api" {
   environment {
     variables = {
       AWS_LAMBDA_HTTP_IGNORE_STAGE_IN_PATH = "true"
+      COGNITO_USER_POOL                    = aws_cognito_user_pool.players.id
     }
   }
   logging_config {

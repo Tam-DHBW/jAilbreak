@@ -7,8 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_dynamo::{from_items, to_item};
 
 use crate::{
-    ExtractState, db,
-    response::{ApiResult, MapBoxError},
+    auth::AuthorizedAdmin, db, response::{ApiResult, MapBoxError}, ExtractState
 };
 
 pub use db::ComponentID;
@@ -30,7 +29,10 @@ error_response!(GetComponentsError {
     QueryComponents(BoxError)
 });
 
-pub async fn admin_get_components(state: ExtractState) -> ApiResult<Json<GetComponentsResponse>> {
+pub async fn admin_get_components(
+    _: AuthorizedAdmin,
+    state: ExtractState,
+) -> ApiResult<Json<GetComponentsResponse>> {
     let components: Vec<db::PromptComponent> = state
         .dynamo
         .query()
@@ -66,7 +68,10 @@ error_response!(AddComponentError {
     ComponentCreation(BoxError)
 });
 
-pub async fn admin_add_component(state: ExtractState) -> ApiResult<Json<AddComponentResponse>> {
+pub async fn admin_add_component(
+    _: AuthorizedAdmin,
+    state: ExtractState,
+) -> ApiResult<Json<AddComponentResponse>> {
     let component_id = db::ComponentID(
         db::Counter::increment(&state.dynamo, db::Counter::PROMPT_COMPONENT_ID).await?,
     );
@@ -113,6 +118,7 @@ error_response!(ModifyComponentError {
 });
 
 pub async fn admin_modify_component(
+    _: AuthorizedAdmin,
     state: ExtractState,
     Path(component_id): Path<ComponentID>,
     request: ModifyComponentRequest,
@@ -152,6 +158,7 @@ error_response!(DeleteComponentError {
 });
 
 pub async fn admin_delete_component(
+    _: AuthorizedAdmin,
     state: ExtractState,
     Path(component_id): Path<ComponentID>,
 ) -> ApiResult<()> {
@@ -189,6 +196,7 @@ error_response!(MoveComponentError {
 });
 
 pub async fn admin_move_component(
+    _: AuthorizedAdmin,
     state: ExtractState,
     Path(component_id): Path<ComponentID>,
     request: MoveComponentRequest,

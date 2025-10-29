@@ -20,6 +20,7 @@ pub struct InnerState {
     sdk_config: SdkConfig,
     bedrockagent: aws_sdk_bedrockagentruntime::Client,
     dynamo: aws_sdk_dynamodb::Client,
+    cognito: aws_sdk_cognitoidentityprovider::Client,
 }
 
 pub async fn run() {
@@ -53,11 +54,13 @@ pub async fn run() {
 
     let bedrockagent = aws_sdk_bedrockagentruntime::Client::new(&sdk_config);
     let dynamo = aws_sdk_dynamodb::Client::new(&sdk_config);
+    let cognito = aws_sdk_cognitoidentityprovider::Client::new(&sdk_config);
 
     let inner_state = InnerState {
         sdk_config,
         bedrockagent,
         dynamo,
+        cognito,
     };
 
     let router = routes::create_router()

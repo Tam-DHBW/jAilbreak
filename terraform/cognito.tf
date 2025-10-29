@@ -27,6 +27,11 @@ resource "aws_cognito_user_pool" "players" {
   }
 }
 
+resource "aws_cognito_user_group" "administrator" {
+  user_pool_id = aws_cognito_user_pool.players.id
+  name = "Administrator"
+}
+
 resource "aws_cognito_user_pool_client" "frontend" {
   name         = "jb_frontend_client"
   user_pool_id = aws_cognito_user_pool.players.id

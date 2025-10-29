@@ -9,6 +9,7 @@ aws-config.workspace = true
 aws-smithy-http-client.workspace = true
 aws-sdk-dynamodb.workspace = true
 aws-sdk-bedrockagentruntime.workspace = true
+aws-sdk-cognitoidentityprovider.workspace = true
 tokio.workspace = true
 tower-http.workspace = true
 axum.workspace = true
