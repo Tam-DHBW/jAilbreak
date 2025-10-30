@@ -7,7 +7,10 @@ use serde::{Deserialize, Serialize};
 use serde_dynamo::{from_items, to_item};
 
 use crate::{
-    auth::AuthorizedAdmin, db, response::{ApiResult, MapBoxError}, ExtractState
+    ExtractState,
+    auth::AuthorizedAdmin,
+    db,
+    response::{ApiResult, MapBoxError},
 };
 
 pub use db::ComponentID;
@@ -58,12 +61,22 @@ pub async fn admin_get_components(
     Ok(Json(GetComponentsResponse { components }))
 }
 
+#[derive(Deserialize, FromRequest, Debug)]
+#[from_request(via(Json))]
+pub struct AddComponentRequest {
+    predecessor: Option<ComponentID>,
+}
+
 #[derive(Serialize, Debug)]
 pub struct AddComponentResponse {
     component_id: ComponentID,
 }
 
 error_response!(AddComponentError {
+    /// Predecessor does not exist
+    PredecessorDoesNotExist[NOT_FOUND],
+    /// Failed to fetch adjacent prompt component
+    QueryAdjacent(BoxError),
     /// Unable to create prompt component
     ComponentCreation(BoxError)
 });
@@ -71,19 +84,20 @@ error_response!(AddComponentError {
 pub async fn admin_add_component(
     _: AuthorizedAdmin,
     state: ExtractState,
+    request: AddComponentRequest,
 ) -> ApiResult<Json<AddComponentResponse>> {
     let component_id = db::ComponentID(
         db::Counter::increment(&state.dynamo, db::Counter::PROMPT_COMPONENT_ID).await?,
     );
-    let sdsdsdsd = db::PromptComponent::create_sort_key(&state.dynamo, None)
+    let ordering = db::PromptComponent::create_sort_key(&state.dynamo, request.predecessor)
         .await
-        .map_err(AddComponentError::ComponentCreation)?
-        .unwrap();
+        .map_err(AddComponentError::QueryAdjacent)?
+        .ok_or(AddComponentError::PredecessorDoesNotExist)?;
 
     let component = db::PromptComponent {
         component_id: component_id,
         template_id: db::TemplateID::default(),
-        ordering: sdsdsdsd,
+        ordering,
         text: String::default(),
     };
 
