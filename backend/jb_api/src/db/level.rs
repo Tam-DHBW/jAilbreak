@@ -7,7 +7,7 @@ pub struct LevelID(pub u64);
 pub struct Level {
     pub level_id: LevelID,
     pub name: String,
-    pub prompt_components: Vec<super::PromptComponent>,
+    pub prompt_components: Vec<super::ComponentID>,
     pub next: Vec<LevelID>
 }
 
