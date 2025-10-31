@@ -6,16 +6,19 @@ pub mod admin;
 pub mod chat;
 pub mod validate;
 
-pub use crate::db::LevelID;
 use crate::{
     ExtractState, db,
     response::{ApiResult, MapBoxError},
 };
 
+
+pub use crate::db::{LevelID, LevelDifficulty};
+
 #[derive(Serialize, Debug)]
 pub struct Level {
     id: LevelID,
     name: String,
+    difficulty: LevelDifficulty,
     next: Vec<LevelID>,
 }
 
@@ -45,6 +48,7 @@ pub async fn get_levels(state: ExtractState) -> ApiResult<Json<GetLevelsResponse
         .map(|level| Level {
             id: level.level_id,
             name: level.name,
+            difficulty: level.difficulty,
             next: level.next,
         })
         .collect();

@@ -7,7 +7,7 @@ use axum::{
 };
 use itertools::Itertools;
 use serde::Deserialize;
-use serde_dynamo::{aws_sdk_dynamodb_1::to_attribute_value, to_item};
+use serde_dynamo::{to_attribute_value, to_item};
 
 use crate::{
     ExtractState,
@@ -81,6 +81,7 @@ pub async fn admin_create_level(
         level_id,
         name: request.name,
         password,
+        difficulty: db::LevelDifficulty::Low,
         prompt_components: Vec::new(),
         next: Vec::new(),
     };
@@ -107,6 +108,7 @@ pub async fn admin_create_level(
 pub struct ModifyLevelRequest {
     name: Option<String>,
     password: Option<String>,
+    difficulty: Option<db::LevelDifficulty>,
     prompt_components: Option<Vec<crate::routes::prompt::ComponentID>>,
     next: Option<Vec<LevelID>>,
 }
@@ -131,7 +133,20 @@ pub async fn admin_modify_level(
     }
 
     if let Some(password) = request.password {
-        actions.push(("password", (db::Level::PASSWORD, AttributeValue::S(password))));
+        actions.push((
+            "password",
+            (db::Level::PASSWORD, AttributeValue::S(password)),
+        ));
+    }
+
+    if let Some(difficulty) = request.difficulty {
+        actions.push((
+            "difficulty",
+            (
+                db::Level::DIFFICULTY,
+                to_attribute_value(difficulty).expect("Cant convert attribute value to string"),
+            ),
+        ));
     }
 
     if let Some(prompt_components) = request.prompt_components {
