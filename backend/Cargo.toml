@@ -47,7 +47,7 @@ bin = ["api"]
 features = ["local-testing"]
 
 [workspace.metadata.lambda.watch.env_var]
-COGNITO_USER_POOL = "eu-central-1_Gz1bQbuzr"
+COGNITO_USER_POOL = "eu-central-1_CP4ZyMSik"
 
 
 

@@ -7,16 +7,16 @@ use lambda_http::RequestExt;
 
 use crate::response::{ApiResult, BoxApiError, MapBoxError};
 
-struct Sub(String);
+struct Username(String);
 
 pub struct AuthorizedModerator<E = ()> {
-    sub: Sub,
+    username: Username,
     _extra: E,
 }
 
 impl<E> AuthorizedModerator<E> {
-    pub fn sub(&self) -> &str {
-        &self.sub.0
+    pub fn username(&self) -> &str {
+        &self.username.0
     }
 }
 
@@ -32,7 +32,7 @@ error_response!(AuthorizationError {
 impl<E, S> FromRequestParts<S> for AuthorizedModerator<E>
 where
     S: Send + Sync,
-    for<'a> E: FromRequestParts<(&'a Sub, &'a S)>,
+    for<'a> E: FromRequestParts<(&'a Username, &'a S)>,
 {
     type Rejection = Response;
 
@@ -40,25 +40,25 @@ where
         parts: &mut axum::http::request::Parts,
         state: &S,
     ) -> Result<Self, Self::Rejection> {
-        let sub: Sub = 'sub: {
+        let sub: Username = 'username: {
             #[cfg(feature = "local-testing")]
             {
                 use axum::http::HeaderValue;
-                if let Some(Ok(sub)) = parts
+                if let Some(Ok(username)) = parts
                     .headers
-                    .get("JAILBREAK_USER_SUB")
+                    .get("JAILBREAK_MODERATOR_NAME")
                     .map(HeaderValue::to_str)
                 {
-                    break 'sub Sub(sub.to_owned());
+                    break 'username Username(username.to_owned());
                 }
             }
 
-            break 'sub parts
+            break 'username parts
                 .request_context_ref()
                 .and_then(|context| context.authorizer())
-                .and_then(|authorizer| authorizer.fields.get("sub"))
+                .and_then(|authorizer| authorizer.fields.get("username"))
                 .and_then(|sub| sub.as_str())
-                .map(|sub| Sub(sub.to_owned()))
+                .map(|sub| Username(sub.to_owned()))
                 .ok_or(BoxApiError::from(AuthorizationError::NotAuthorized).into_response())?;
         };
 
@@ -66,7 +66,7 @@ where
             .await
             .map_err(|err| err.into_response())?;
 
-        Ok(AuthorizedModerator { sub, _extra: extra })
+        Ok(AuthorizedModerator { username: sub, _extra: extra })
     }
 }
 
@@ -74,12 +74,12 @@ pub type AuthorizedLevelManager = AuthorizedModerator<AssertLevelManager>;
 
 pub struct AssertLevelManager;
 
-impl FromRequestParts<(&Sub, &crate::State)> for AssertLevelManager {
+impl FromRequestParts<(&Username, &crate::State)> for AssertLevelManager {
     type Rejection = BoxApiError;
 
     async fn from_request_parts(
         _parts: &mut axum::http::request::Parts,
-        (sub, state): &(&Sub, &crate::State),
+        (sub, state): &(&Username, &crate::State),
     ) -> Result<Self, Self::Rejection> {
         if is_in_group(&state.cognito, sub, "LevelManager")
             .await
@@ -94,7 +94,7 @@ impl FromRequestParts<(&Sub, &crate::State)> for AssertLevelManager {
 
 async fn is_in_group(
     cognito: &aws_sdk_cognitoidentityprovider::Client,
-    sub: &Sub,
+    sub: &Username,
     group_name: &str,
 ) -> ApiResult<bool> {
     let user_pool = std::env::var("COGNITO_USER_POOL")

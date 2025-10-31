@@ -1,7 +1,7 @@
 use std::vec;
 
 use alcoholic_jwt::{JWKS, ValidJWT, Validation};
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use aws_lambda_events::{
     apigw::{
         ApiGatewayCustomAuthorizerPolicy, ApiGatewayCustomAuthorizerRequest,
@@ -58,21 +58,26 @@ async fn authorizer(
         jwk,
         vec![
             Validation::Issuer(issuer.clone()),
-            Validation::SubjectPresent,
             Validation::NotExpired,
         ],
     )?;
 
     let sub = claims
         .get("sub")
-        .expect("Sub claim missing")
+        .ok_or(anyhow!("Sub claim missing"))?
+        .as_str()
+        .unwrap();
+
+    let username = claims
+        .get("username")
+        .ok_or(anyhow!("Username claim missing"))?
         .as_str()
         .unwrap();
 
     Ok(create_response(
         Some(sub.to_owned()),
         Some(method_arn),
-        json!({ "sub": sub }),
+        json!({ "sub": sub, "username": username }),
     ))
 }
 
