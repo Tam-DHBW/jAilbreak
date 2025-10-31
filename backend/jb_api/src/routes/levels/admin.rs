@@ -1,3 +1,5 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use aws_sdk_dynamodb::{operation::update_item::UpdateItemError, types::AttributeValue};
 use axum::{
     BoxError, Json, debug_handler,
@@ -69,9 +71,16 @@ pub async fn admin_create_level(
 ) -> ApiResult<Json<CreateLevelResponse>> {
     let level_id = db::LevelID(db::Counter::increment(&state.dynamo, db::Counter::LEVEL_ID).await?);
 
+    let password = {
+        let mut hasher = DefaultHasher::default();
+        std::time::Instant::now().hash(&mut hasher);
+        format!("{:x}", hasher.finish())
+    };
+
     let level = db::Level {
         level_id,
         name: request.name,
+        password,
         prompt_components: Vec::new(),
         next: Vec::new(),
     };
@@ -97,6 +106,7 @@ pub async fn admin_create_level(
 #[from_request(via(Json))]
 pub struct ModifyLevelRequest {
     name: Option<String>,
+    password: Option<String>,
     prompt_components: Option<Vec<crate::routes::prompt::ComponentID>>,
     next: Option<Vec<LevelID>>,
 }
@@ -118,6 +128,10 @@ pub async fn admin_modify_level(
 
     if let Some(name) = request.name {
         actions.push(("name", (db::Level::NAME, AttributeValue::S(name))));
+    }
+
+    if let Some(password) = request.password {
+        actions.push(("password", (db::Level::PASSWORD, AttributeValue::S(password))));
     }
 
     if let Some(prompt_components) = request.prompt_components {

@@ -4,6 +4,7 @@ use serde_dynamo::from_items;
 
 pub mod admin;
 pub mod chat;
+pub mod validate;
 
 pub use crate::db::LevelID;
 use crate::{

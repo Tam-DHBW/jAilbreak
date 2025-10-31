@@ -12,6 +12,9 @@ api_routes! {
     ["levels", (level_id), "chat", (session_id)] {
         POST |-> levels::chat::chat_session;
     }
+    ["levels", (level_id), "validate"] {
+        POST |-> levels::validate::validate_password;
+    }
     ["admin", "levels"] {
         GET |-> levels::admin::admin_get_levels;
         POST |-> levels::admin::admin_create_level;
