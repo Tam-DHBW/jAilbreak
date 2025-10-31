@@ -92,7 +92,7 @@ resource "aws_lambda_function" "api" {
   environment {
     variables = {
       AWS_LAMBDA_HTTP_IGNORE_STAGE_IN_PATH = "true"
-      COGNITO_USER_POOL                    = aws_cognito_user_pool.players.id
+      COGNITO_USER_POOL                    = aws_cognito_user_pool.moderators.id
     }
   }
   logging_config {
@@ -138,7 +138,7 @@ resource "aws_lambda_function" "authorizer" {
   filename      = "./dummy.zip"
   environment {
     variables = {
-      TOKEN_ISSUER = "https://cognito-idp.${aws_cognito_user_pool.players.region}.amazonaws.com/${aws_cognito_user_pool.players.id}"
+      TOKEN_ISSUER = "https://cognito-idp.${aws_cognito_user_pool.moderators.region}.amazonaws.com/${aws_cognito_user_pool.moderators.id}"
     }
   }
   logging_config {

@@ -4,7 +4,7 @@ mod prompt;
 api_routes! {
     ["ping"] {
         GET --> async || { "Pong" };
-        POST |-> async |user: crate::auth::AuthorizedUser| { format!("Pong Authorized, hello {}", user.sub()) };
+        POST |-> async |user: crate::auth::AuthorizedModerator| { format!("Pong Authorized, hello {}", user.sub()) };
     }
     ["levels"] {
         GET |-> levels::get_levels;

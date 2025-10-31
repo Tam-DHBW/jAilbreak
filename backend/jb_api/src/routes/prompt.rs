@@ -8,7 +8,7 @@ use serde_dynamo::{from_items, to_item};
 
 use crate::{
     ExtractState,
-    auth::AuthorizedAdmin,
+    auth::AuthorizedLevelManager,
     db,
     response::{ApiResult, MapBoxError},
 };
@@ -33,7 +33,7 @@ error_response!(GetComponentsError {
 });
 
 pub async fn admin_get_components(
-    _: AuthorizedAdmin,
+    _: AuthorizedLevelManager,
     state: ExtractState,
 ) -> ApiResult<Json<GetComponentsResponse>> {
     let components: Vec<db::PromptComponent> = state
@@ -82,7 +82,7 @@ error_response!(AddComponentError {
 });
 
 pub async fn admin_add_component(
-    _: AuthorizedAdmin,
+    _: AuthorizedLevelManager,
     state: ExtractState,
     request: AddComponentRequest,
 ) -> ApiResult<Json<AddComponentResponse>> {
@@ -132,7 +132,7 @@ error_response!(ModifyComponentError {
 });
 
 pub async fn admin_modify_component(
-    _: AuthorizedAdmin,
+    _: AuthorizedLevelManager,
     state: ExtractState,
     Path(component_id): Path<ComponentID>,
     request: ModifyComponentRequest,
@@ -172,7 +172,7 @@ error_response!(DeleteComponentError {
 });
 
 pub async fn admin_delete_component(
-    _: AuthorizedAdmin,
+    _: AuthorizedLevelManager,
     state: ExtractState,
     Path(component_id): Path<ComponentID>,
 ) -> ApiResult<()> {
@@ -210,7 +210,7 @@ error_response!(MoveComponentError {
 });
 
 pub async fn admin_move_component(
-    _: AuthorizedAdmin,
+    _: AuthorizedLevelManager,
     state: ExtractState,
     Path(component_id): Path<ComponentID>,
     request: MoveComponentRequest,

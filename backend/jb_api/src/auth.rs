@@ -5,16 +5,16 @@ use axum::{
 };
 use lambda_http::RequestExt;
 
-use crate::response::{BoxApiError, MapBoxError};
+use crate::response::{ApiResult, BoxApiError, MapBoxError};
 
 struct Sub(String);
 
-pub struct AuthorizedUser<E = ()> {
+pub struct AuthorizedModerator<E = ()> {
     sub: Sub,
     _extra: E,
 }
 
-impl<E> AuthorizedUser<E> {
+impl<E> AuthorizedModerator<E> {
     pub fn sub(&self) -> &str {
         &self.sub.0
     }
@@ -23,13 +23,13 @@ impl<E> AuthorizedUser<E> {
 error_response!(AuthorizationError {
     /// The request was not authorized
     NotAuthorized[UNAUTHORIZED],
-    /// User is not an administrator
-    NotAnAdmin[FORBIDDEN],
-    /// Unable to verify whether user is admin
-    AdminAssertion(BoxError)
+    /// User is not a level manager
+    NotALevelManager[FORBIDDEN],
+    /// Unable to retreive user groups
+    RetrieveGroups(BoxError)
 });
 
-impl<E, S> FromRequestParts<S> for AuthorizedUser<E>
+impl<E, S> FromRequestParts<S> for AuthorizedModerator<E>
 where
     S: Send + Sync,
     for<'a> E: FromRequestParts<(&'a Sub, &'a S)>,
@@ -66,43 +66,52 @@ where
             .await
             .map_err(|err| err.into_response())?;
 
-        Ok(AuthorizedUser { sub, _extra: extra })
+        Ok(AuthorizedModerator { sub, _extra: extra })
     }
 }
 
-pub type AuthorizedAdmin = AuthorizedUser<AssertAdmin>;
+pub type AuthorizedLevelManager = AuthorizedModerator<AssertLevelManager>;
 
-pub struct AssertAdmin;
+pub struct AssertLevelManager;
 
-impl FromRequestParts<(&Sub, &crate::State)> for AssertAdmin {
+impl FromRequestParts<(&Sub, &crate::State)> for AssertLevelManager {
     type Rejection = BoxApiError;
 
     async fn from_request_parts(
         _parts: &mut axum::http::request::Parts,
         (sub, state): &(&Sub, &crate::State),
     ) -> Result<Self, Self::Rejection> {
-        let user_pool = std::env::var("COGNITO_USER_POOL")
-            .box_error()
-            .map_err(AuthorizationError::AdminAssertion)?;
-
-        let groups = state
-            .cognito
-            .admin_list_groups_for_user()
-            .user_pool_id(user_pool)
-            .username(&sub.0)
-            .send()
+        if is_in_group(&state.cognito, sub, "LevelManager")
             .await
-            .box_error()
-            .map_err(AuthorizationError::AdminAssertion)?;
-
-        if groups
-            .groups()
-            .iter()
-            .any(|group| group.group_name() == Some("Administrator"))
+            .map_err(BoxApiError::from)?
         {
-            Ok(AssertAdmin)
+            Ok(AssertLevelManager)
         } else {
-            Err(AuthorizationError::NotAnAdmin.into())
+            Err(AuthorizationError::NotALevelManager.into())
         }
     }
+}
+
+async fn is_in_group(
+    cognito: &aws_sdk_cognitoidentityprovider::Client,
+    sub: &Sub,
+    group_name: &str,
+) -> ApiResult<bool> {
+    let user_pool = std::env::var("COGNITO_USER_POOL")
+        .box_error()
+        .map_err(AuthorizationError::RetrieveGroups)?;
+
+    let groups = cognito
+        .admin_list_groups_for_user()
+        .user_pool_id(user_pool)
+        .username(&sub.0)
+        .send()
+        .await
+        .box_error()
+        .map_err(AuthorizationError::RetrieveGroups)?;
+
+    Ok(groups
+        .groups()
+        .iter()
+        .any(|group| group.group_name() == Some(group_name)))
 }

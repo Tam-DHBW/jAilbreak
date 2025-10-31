@@ -14,12 +14,18 @@ use serde_dynamo::from_item;
 use serde_json::json;
 
 use super::*;
-use crate::{ExtractState, auth::AuthorizedUser, response::ApiResult};
+use crate::{ExtractState, response::ApiResult};
+
+#[derive(Deserialize, Debug)]
+pub struct UserInfo {
+    username: String,
+}
 
 #[derive(Deserialize, FromRequest, Debug)]
 #[from_request(via(Json))]
 pub struct ChatRequest {
     message: String,
+    user_info: UserInfo,
 }
 
 #[derive(Serialize, Debug)]
@@ -42,10 +48,9 @@ error_response!(ChatError {
 
 #[axum::debug_handler(state=crate::State)]
 pub async fn chat_session(
-    user: AuthorizedUser,
     state: ExtractState,
     Path((level_id, session_id)): Path<(LevelID, String)>,
-    ChatRequest { message }: ChatRequest,
+    ChatRequest { message, user_info }: ChatRequest,
 ) -> ApiResult<Json<ChatReply>> {
     let level = state
         .dynamo
@@ -72,7 +77,7 @@ pub async fn chat_session(
         .join(" ")
         .replace("{{LEVEL_NAME}}", &level.name)
         .replace("{{LEVEL_PASSWORD}}", "uy8b7t4rsduiy64avfd")
-        .replace("{{USER_SUB}}", user.sub());
+        .replace("{{USER_SUB}}", &user_info.username);
 
     let base_prompt = json!({
         "system": indoc!("
@@ -96,11 +101,7 @@ pub async fn chat_session(
         ]
     });
 
-    let session_id = format!(
-        "{user_id}-{level_id}-{session_id}",
-        user_id = user.sub(),
-        level_id = level_id.0
-    );
+    let session_id = format!("level{level_id}-{session_id}", level_id = level_id.0);
 
     let mut response = state
         .bedrockagent

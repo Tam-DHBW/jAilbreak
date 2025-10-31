@@ -9,7 +9,7 @@ use serde_dynamo::{aws_sdk_dynamodb_1::to_attribute_value, to_item};
 
 use crate::{
     ExtractState,
-    auth::AuthorizedAdmin,
+    auth::AuthorizedLevelManager,
     db,
     response::{ApiResult, MapBoxError},
 };
@@ -30,7 +30,7 @@ error_response!(AdminGetLevelsError {
 
 #[debug_handler(state=crate::State)]
 pub async fn admin_get_levels(
-    _: AuthorizedAdmin,
+    _: AuthorizedLevelManager,
     state: ExtractState,
 ) -> ApiResult<Json<AdminGetLevelsResponse>> {
     let levels: Vec<db::Level> = state
@@ -63,7 +63,7 @@ error_response!(CreateLevelError {
 });
 
 pub async fn admin_create_level(
-    _: AuthorizedAdmin,
+    _: AuthorizedLevelManager,
     state: ExtractState,
     request: CreateLevelRequest,
 ) -> ApiResult<Json<CreateLevelResponse>> {
@@ -109,7 +109,7 @@ error_response!(ModifyLevelError {
 });
 
 pub async fn admin_modify_level(
-    _: AuthorizedAdmin,
+    _: AuthorizedLevelManager,
     state: ExtractState,
     Path(level_id): Path<LevelID>,
     request: ModifyLevelRequest,
@@ -190,7 +190,7 @@ error_response!(DeleteLevelError {
 });
 
 pub async fn admin_delete_level(
-    _: AuthorizedAdmin,
+    _: AuthorizedLevelManager,
     state: ExtractState,
     Path(level_id): Path<LevelID>,
 ) -> ApiResult<()> {

@@ -20,7 +20,7 @@ output "website_url" {
 
 output "cognito_user_pool_id" {
   description = "Cognito User Pool ID"
-  value       = aws_cognito_user_pool.players.id
+  value       = aws_cognito_user_pool.moderators.id
 }
 
 output "cognito_client_id" {
@@ -28,9 +28,9 @@ output "cognito_client_id" {
   value       = aws_cognito_user_pool_client.frontend.id
 }
 
-output "cognito_identity_pool_id" {
-  description = "Cognito Identity Pool ID"
-  value       = aws_cognito_identity_pool.players.id
+output "cognito_password_set_url" {
+  description = "URL to use for setting a cognito password"
+  value = "https://${aws_cognito_user_pool_domain.moderators.domain}.auth.${aws_cognito_user_pool.moderators.region}.amazoncognito.com/login?client_id=${aws_cognito_user_pool_client.frontend.id}&response_type=${join("", aws_cognito_user_pool_client.frontend.allowed_oauth_flows)}&redirect_uri=${urlencode(join("", aws_cognito_user_pool_client.frontend.callback_urls))}"
 }
 
 output "api_gateway_url" {
