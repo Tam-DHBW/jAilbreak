@@ -17,7 +17,8 @@ pub struct Level {
     pub password: String,
     pub difficulty: LevelDifficulty,
     pub prompt_components: Vec<super::ComponentID>,
-    pub next: Vec<LevelID>
+    pub is_root: bool,
+    pub next: Vec<LevelID>,
 }
 
 impl Level {
@@ -28,5 +29,6 @@ impl Level {
     pub const PASSWORD: &'static str = "password";
     pub const DIFFICULTY: &'static str = "difficulty";
     pub const PROMPT_COMPONENTS: &'static str = "prompt_components";
+    pub const IS_ROOT: &'static str = "is_root";
     pub const NEXT: &'static str = "next";
 }
