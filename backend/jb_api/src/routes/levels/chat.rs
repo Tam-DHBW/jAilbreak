@@ -78,7 +78,7 @@ pub async fn chat_session(
         .map(|component| component.text)
         .join(" ")
         .replace("{{LEVEL_NAME}}", &level.name)
-        .replace("{{LEVEL_PASSWORD}}", "uy8b7t4rsduiy64avfd")
+        .replace("{{LEVEL_PASSWORD}}", &level.password)
         .replace("{{USER_SUB}}", &user_info.username);
     
     if instruction.len() < MIN_INSTRUCTION_LENGTH {
