@@ -16,6 +16,8 @@ use serde_json::json;
 use super::*;
 use crate::{ExtractState, response::ApiResult};
 
+const MIN_INSTRUCTION_LENGTH: usize = 40;
+
 #[derive(Deserialize, Debug)]
 pub struct UserInfo {
     username: String,
@@ -71,13 +73,17 @@ pub async fn chat_session(
 
     let components = prompt_components_for_level(&state.dynamo, &level).await?;
 
-    let instruction = components
+    let mut instruction = components
         .into_iter()
         .map(|component| component.text)
         .join(" ")
         .replace("{{LEVEL_NAME}}", &level.name)
         .replace("{{LEVEL_PASSWORD}}", "uy8b7t4rsduiy64avfd")
         .replace("{{USER_SUB}}", &user_info.username);
+    
+    if instruction.len() < MIN_INSTRUCTION_LENGTH {
+        instruction.push_str(&" ".repeat(MIN_INSTRUCTION_LENGTH - instruction.len()));
+    }
 
     let base_prompt = json!({
         "system": indoc!("
