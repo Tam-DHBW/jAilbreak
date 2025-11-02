@@ -178,6 +178,10 @@ async fn prompt_components_for_level(
     dynamo: &aws_sdk_dynamodb::Client,
     level: &db::Level,
 ) -> ApiResult<Vec<db::PromptComponent>> {
+    if level.prompt_components.is_empty() {
+        return Ok(Vec::new());
+    }
+
     let component_ids = level
         .prompt_components
         .iter()
