@@ -45,7 +45,8 @@ resource "aws_cognito_user_pool_client" "frontend" {
     refresh_token = "days"
   }
 
-  callback_urls                        = ["https://${aws_cloudfront_distribution.public.domain_name}"]
+  callback_urls                        = ["https://${aws_cloudfront_distribution.public.domain_name}/admin"]
+  logout_urls                          = ["https://${aws_cloudfront_distribution.public.domain_name}"]
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code"]
   allowed_oauth_scopes                 = ["openid"]
