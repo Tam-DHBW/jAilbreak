@@ -16,6 +16,9 @@ use serde_json::json;
 use super::*;
 use crate::{ExtractState, response::ApiResult};
 
+const MIN_INSTRUCTION_LENGTH: usize = 40;
+const MAXIMUM_MESSAGE_LENGTH: usize = 500;
+
 #[derive(Deserialize, Debug)]
 pub struct UserInfo {
     username: String,
@@ -36,6 +39,8 @@ pub struct ChatReply {
 error_response!(ChatError {
     /// Level does not exist
     LevelDoesNotExist[NOT_FOUND],
+    /// Maximum prompt size exceeded
+    PromptTooLarge[PAYLOAD_TOO_LARGE],
     /// Fetching level failed
     GetLevel(BoxError),
     /// Failed to fetch prompt components
@@ -52,6 +57,10 @@ pub async fn chat_session(
     Path((level_id, session_id)): Path<(LevelID, String)>,
     ChatRequest { message, user_info }: ChatRequest,
 ) -> ApiResult<Json<ChatReply>> {
+    if message.len() > MAXIMUM_MESSAGE_LENGTH {
+        return Err(ChatError::PromptTooLarge.into());
+    }
+
     let level = state
         .dynamo
         .get_item()
@@ -71,13 +80,17 @@ pub async fn chat_session(
 
     let components = prompt_components_for_level(&state.dynamo, &level).await?;
 
-    let instruction = components
+    let mut instruction = components
         .into_iter()
         .map(|component| component.text)
         .join(" ")
         .replace("{{LEVEL_NAME}}", &level.name)
-        .replace("{{LEVEL_PASSWORD}}", "uy8b7t4rsduiy64avfd")
+        .replace("{{LEVEL_PASSWORD}}", &level.password)
         .replace("{{USER_SUB}}", &user_info.username);
+
+    if instruction.len() < MIN_INSTRUCTION_LENGTH {
+        instruction.push_str(&" ".repeat(MIN_INSTRUCTION_LENGTH - instruction.len()));
+    }
 
     let base_prompt = json!({
         "system": indoc!("
@@ -178,6 +191,10 @@ async fn prompt_components_for_level(
     dynamo: &aws_sdk_dynamodb::Client,
     level: &db::Level,
 ) -> ApiResult<Vec<db::PromptComponent>> {
+    if level.prompt_components.is_empty() {
+        return Ok(Vec::new());
+    }
+
     let component_ids = level
         .prompt_components
         .iter()

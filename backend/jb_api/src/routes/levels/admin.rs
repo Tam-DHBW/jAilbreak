@@ -83,6 +83,7 @@ pub async fn admin_create_level(
         password,
         difficulty: db::LevelDifficulty::Low,
         prompt_components: Vec::new(),
+        is_root: false,
         next: Vec::new(),
     };
 
@@ -110,6 +111,7 @@ pub struct ModifyLevelRequest {
     password: Option<String>,
     difficulty: Option<db::LevelDifficulty>,
     prompt_components: Option<Vec<crate::routes::prompt::ComponentID>>,
+    is_root: Option<bool>,
     next: Option<Vec<LevelID>>,
 }
 
@@ -164,6 +166,10 @@ pub async fn admin_modify_level(
                 .map_err(ModifyLevelError::LevelModification)?,
             ),
         ));
+    }
+
+    if let Some(is_root) = request.is_root {
+        actions.push(("is_root", (db::Level::IS_ROOT, AttributeValue::Bool(is_root))));
     }
 
     if let Some(next) = request.next {

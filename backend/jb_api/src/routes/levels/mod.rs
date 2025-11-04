@@ -19,6 +19,7 @@ pub struct Level {
     id: LevelID,
     name: String,
     difficulty: LevelDifficulty,
+    is_root: bool,
     next: Vec<LevelID>,
 }
 
@@ -49,6 +50,7 @@ pub async fn get_levels(state: ExtractState) -> ApiResult<Json<GetLevelsResponse
             id: level.level_id,
             name: level.name,
             difficulty: level.difficulty,
+            is_root: level.is_root,
             next: level.next,
         })
         .collect();
