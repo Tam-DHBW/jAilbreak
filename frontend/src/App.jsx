@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-import { getCurrentUser, signOut } from 'aws-amplify/auth'
 import { audioManager } from './audio'
+import { getStoredUsername, clearStoredUsername } from './localStorage'
 import SoundVisualizer from './components/SoundVisualizer'
 import ProgressBar from './components/ProgressBar'
 import Auth from './components/Auth'
@@ -10,6 +10,7 @@ import Home from './pages/Home'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import Profile from './pages/Profile'
+import AdminPanel from './pages/AdminPanel'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -20,21 +21,19 @@ function App() {
     checkUser()
   }, [])
 
-  const checkUser = async () => {
-    try {
-      const currentUser = await getCurrentUser()
-      const { fetchUserAttributes } = await import('aws-amplify/auth')
-      const attributes = await fetchUserAttributes()
-      setUser({ ...currentUser, attributes })
-    } catch {
+  const checkUser = () => {
+    const username = getStoredUsername()
+    if (username) {
+      setUser({ username, name: username })
+    } else {
       setUser(null)
     }
     setLoading(false)
   }
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     audioManager.playSound('click')
-    await signOut()
+    clearStoredUsername()
     setUser(null)
     audioManager.stopBackgroundMusic()
     setMusicPlaying(false)
@@ -93,7 +92,7 @@ function App() {
             <div className="nav-visualizer">
               <SoundVisualizer isPlaying={musicPlaying} />
             </div>
-            <span className="welcome-text">Welcome, {user.attributes?.name || user.username}</span>
+            <span className="welcome-text">Welcome, {user.name}</span>
             <button onClick={handleSignOut} className="nes-btn">Sign Out</button>
           </div>
         </nav>
@@ -104,6 +103,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<div className="nes-container is-dark"><h1>404</h1><p>Page not found</p></div>} />
         </Routes>
       </Router>

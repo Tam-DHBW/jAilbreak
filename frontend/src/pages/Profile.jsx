@@ -1,16 +1,22 @@
 import { useState, useEffect } from 'react'
-import { getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth'
+import { getStoredUsername, getGameProgress, getUserSettings } from '../localStorage'
 
 function Profile() {
   const [user, setUser] = useState(null)
+  const [gameProgress, setGameProgress] = useState(null)
+  const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const getUserData = async () => {
+    const getUserData = () => {
       try {
-        const currentUser = await getCurrentUser()
-        const attributes = await fetchUserAttributes()
-        setUser({ ...currentUser, attributes })
+        const username = getStoredUsername()
+        const progress = getGameProgress()
+        const userSettings = getUserSettings()
+        
+        setUser({ username, name: username })
+        setGameProgress(progress)
+        setSettings(userSettings)
       } catch (error) {
         console.error('Error fetching user:', error)
       }
@@ -47,10 +53,16 @@ function Profile() {
             <div className="profile-info">
               <h3>PERSONAL INFORMATION</h3>
               <div className="profile-field">
-                <strong>NAME:</strong> <span className="profile-value">{user?.attributes?.name || user?.username || 'N/A'}</span>
+                <strong>NAME:</strong> <span className="profile-value">{user?.name || 'N/A'}</span>
               </div>
               <div className="profile-field">
-                <strong>EMAIL:</strong> <span className="profile-value">{user?.attributes?.email || 'N/A'}</span>
+                <strong>SESSION:</strong> <span className="profile-value">Local Session</span>
+              </div>
+              <div className="profile-field">
+                <strong>LEVEL:</strong> <span className="profile-value">{gameProgress?.currentLevel || 1}</span>
+              </div>
+              <div className="profile-field">
+                <strong>COMPLETED:</strong> <span className="profile-value">{gameProgress?.completedLevels?.length || 0} levels</span>
               </div>
             </div>
           </div>

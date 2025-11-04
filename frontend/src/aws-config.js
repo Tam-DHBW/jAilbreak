@@ -1,30 +1,13 @@
-// AWS Cognito configuration for jAilbreak authentication
+// AWS Cognito configuration for admin authentication
 export const awsConfig = {
   Auth: {
     Cognito: {
       userPoolId: 'eu-central-1_yVRt9an9Q',       
-      userPoolClientId: '7j4p2pidbarqutnp15evetdhps', 
-      identityPoolId: 'eu-central-1:5be21a9b-ad2c-4509-8e0b-224804410240', 
+      userPoolClientId: '7bgrd9vmbepbe2pup7tupf18ba',
       loginWith: {
-        email: true
+        username: true
       },
-      signUpVerificationMethod: 'code',
-      userAttributes: {
-        email: {
-          required: true
-        },
-        name: {
-          required: true
-        }
-      },
-      allowGuestAccess: false,
-      passwordFormat: {
-        minLength: 8,
-        requireLowercase: true,
-        requireUppercase: true,
-        requireNumbers: true,
-        requireSpecialCharacters: false
-      }
+      allowGuestAccess: false
     }
   }
 }

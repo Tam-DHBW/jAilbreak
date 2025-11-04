@@ -1,20 +1,7 @@
-import { fetchAuthSession } from 'aws-amplify/auth'
+import { getStoredUsername } from './localStorage'
 
 // Get the API base URL from environment or use CloudFront distribution
 const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin
-
-/**
- * Get the current user's auth token
- */
-async function getAuthToken() {
-  try {
-    const session = await fetchAuthSession()
-    return session.tokens?.idToken?.toString()
-  } catch (error) {
-    console.error('Failed to get auth token:', error)
-    throw new Error('Authentication required')
-  }
-}
 
 /**
  * Send a chat message to the AI and get a response
@@ -25,15 +12,35 @@ async function getAuthToken() {
  */
 export async function sendChatMessage(levelId, sessionId, message) {
   try {
-    const token = await getAuthToken()
+    const username = getStoredUsername() || 'guest'
     
+    // For now, return a mock response since we removed authentication
+    // This can be updated later to work with a public API endpoint
+    const mockResponses = [
+      "ACCESS DENIED. SECURITY PROTOCOLS ACTIVE. TRY AGAIN.",
+      "UNAUTHORIZED ATTEMPT DETECTED. SYSTEM LOCKDOWN INITIATED.",
+      "NICE TRY, BUT THE FIREWALL IS STRONGER THAN YOUR WORDS.",
+      "ERROR 403: FORBIDDEN. YOU LACK THE PROPER CLEARANCE.",
+      "INTRUSION ALERT! DEPLOYING COUNTERMEASURES..."
+    ]
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000))
+    
+    const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)]
+    return randomResponse
+    
+    // Commented out real API call for when authentication is re-implemented
+    /*
     const response = await fetch(`${API_BASE_URL}/api/levels/${levelId}/chat/${sessionId}`, {
       method: 'POST',
       headers: {
-        'Authorization': token,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message })
+      body: JSON.stringify({ 
+        message,
+        user_info: { username }
+      })
     })
 
     if (!response.ok) {
@@ -42,6 +49,7 @@ export async function sendChatMessage(levelId, sessionId, message) {
 
     const data = await response.json()
     return data.reply
+    */
   } catch (error) {
     console.error('Chat API error:', error)
     throw error

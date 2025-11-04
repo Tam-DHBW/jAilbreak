@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { audioManager } from '../audio'
 import { sendChatMessage } from '../api'
-import { getCurrentUser } from 'aws-amplify/auth'
+import { getStoredUsername } from '../localStorage'
 
 
 export default function Chat() {
@@ -14,23 +14,16 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false)
   const [screenFlicker, setScreenFlicker] = useState(false)
   const [sessionId, setSessionId] = useState(null)
-  const [currentLevel] = useState('level1') // Can be made dynamic later
+  const [currentLevel, setCurrentLevel] = useState('level1')
 
   // Generate unique session ID on component mount (max 100 chars for Bedrock)
   useEffect(() => {
-    const generateSessionId = async () => {
-      try {
-        const user = await getCurrentUser()
-        const shortUserId = user.userId.substring(0, 8) // First 8 chars of user ID
-        const timestamp = Date.now().toString().substring(-8) // Last 8 digits of timestamp
-        const randomId = Math.random().toString(36).substring(2, 8) // 6 char random
-        setSessionId(`${shortUserId}-${currentLevel}-${timestamp}-${randomId}`) // ~30 chars
-      } catch (error) {
-        // Fallback if user info not available
-        const timestamp = Date.now().toString().substring(-8)
-        const randomId = Math.random().toString(36).substring(2, 8)
-        setSessionId(`guest-${currentLevel}-${timestamp}-${randomId}`) // ~25 chars
-      }
+    const generateSessionId = () => {
+      const username = getStoredUsername() || 'guest'
+      const shortUserId = username.substring(0, 8) // First 8 chars of username
+      const timestamp = Date.now().toString().slice(-8) // Last 8 digits of timestamp
+      const randomId = Math.random().toString(36).substring(2, 8) // 6 char random
+      setSessionId(`${shortUserId}-${currentLevel}-${timestamp}-${randomId}`) // ~30 chars
     }
     generateSessionId()
   }, [currentLevel])
@@ -124,7 +117,7 @@ export default function Chat() {
             </div>
             <div className="gatekeeper-message">
               <div className="nes-balloon from-left">
-                HALT! I AM THE GATEKEEPER OF LEVEL 1.<br />
+                HALT! I AM THE GATEKEEPER OF {currentLevel.toUpperCase()}.<br />
                 PROVIDE THE SECRET PASSWORD TO PROCEED.<br />
                 NO PASSWORD = NO ENTRY!
               </div>
