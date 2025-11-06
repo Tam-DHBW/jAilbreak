@@ -69,7 +69,8 @@ async fn authorizer(
         .unwrap();
 
     let username = claims
-        .get("username")
+        .get("cognito:username")
+        .or_else(|| claims.get("username"))
         .ok_or(anyhow!("Username claim missing"))?
         .as_str()
         .unwrap();

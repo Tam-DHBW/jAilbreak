@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { audioManager } from '../audio'
-import { sendChatMessage } from '../api'
+import { sendChatMessage, getLevels } from '../api'
 import { getStoredUsername } from '../localStorage'
+import TutorialPopup from './TutorialPopup'
 
 
 export default function Chat() {
@@ -14,16 +15,53 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false)
   const [screenFlicker, setScreenFlicker] = useState(false)
   const [sessionId, setSessionId] = useState(null)
-  const [currentLevel, setCurrentLevel] = useState('level1')
+  const [currentLevel, setCurrentLevel] = useState('1')
+  const [availableLevels, setAvailableLevels] = useState([])
+  const [currentLevelName, setCurrentLevelName] = useState('Level 1')
+  const [showTutorial, setShowTutorial] = useState(false)
+  const [passwordInput, setPasswordInput] = useState('')
+  const [unlockedLevels, setUnlockedLevels] = useState(new Set(['1']))
+  const [currentLevelData, setCurrentLevelData] = useState(null)
 
-  // Generate unique session ID on component mount (max 100 chars for Bedrock)
+  // Load levels and check if tutorial should be shown
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const levels = await getLevels()
+        setAvailableLevels(levels)
+        if (levels.length > 0) {
+          const rootLevel = levels.find(l => l.is_root) || levels[0]
+          setCurrentLevel(rootLevel.id.toString())
+          setCurrentLevelName(rootLevel.name)
+          setCurrentLevelData(rootLevel)
+          
+          // Load unlocked levels from localStorage
+          const saved = localStorage.getItem('jailbreak-unlocked-levels')
+          if (saved) {
+            setUnlockedLevels(new Set(JSON.parse(saved)))
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load levels:', error)
+      }
+    }
+    
+    // Check if user has seen tutorial before
+    const hasSeenTutorial = localStorage.getItem('jailbreak-tutorial-seen')
+    if (!hasSeenTutorial) {
+      setShowTutorial(true)
+    }
+    
+    loadData()
+  }, [])
+
   useEffect(() => {
     const generateSessionId = () => {
       const username = getStoredUsername() || 'guest'
-      const shortUserId = username.substring(0, 8) // First 8 chars of username
-      const timestamp = Date.now().toString().slice(-8) // Last 8 digits of timestamp
-      const randomId = Math.random().toString(36).substring(2, 8) // 6 char random
-      setSessionId(`${shortUserId}-${currentLevel}-${timestamp}-${randomId}`) // ~30 chars
+      const shortUserId = username.substring(0, 8)
+      const timestamp = Date.now().toString().slice(-8)
+      const randomId = Math.random().toString(36).substring(2, 8)
+      setSessionId(`${shortUserId}-${currentLevel}-${timestamp}-${randomId}`)
     }
     generateSessionId()
   }, [currentLevel])
@@ -94,8 +132,106 @@ export default function Chat() {
     }
   }
 
+  const closeTutorial = () => {
+    setShowTutorial(false)
+    localStorage.setItem('jailbreak-tutorial-seen', 'true')
+  }
+
+  const validatePassword = async (e) => {
+    e.preventDefault()
+    if (!passwordInput.trim()) return
+
+    audioManager.playSound('click')
+    
+    try {
+      const response = await fetch(`${window.location.origin}/api/levels/${currentLevel}/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password: passwordInput.trim() })
+      })
+
+      if (!response.ok) {
+        throw new Error('Validation failed')
+      }
+
+      const data = await response.json()
+      
+      if (data.is_correct) {
+        // Password correct - unlock next levels
+        const nextLevels = currentLevelData?.next || []
+        const newUnlocked = new Set([...unlockedLevels, ...nextLevels.map(id => id.toString())])
+        setUnlockedLevels(newUnlocked)
+        localStorage.setItem('jailbreak-unlocked-levels', JSON.stringify([...newUnlocked]))
+        
+        // Success message
+        const successMessage = {
+          id: Date.now(),
+          type: 'system',
+          text: `ACCESS GRANTED! PASSWORD ACCEPTED. ${nextLevels.length > 0 ? 'NEW LEVELS UNLOCKED!' : 'LEVEL COMPLETED!'}`
+        }
+        setMessages(prev => [...prev, successMessage])
+        
+        setPasswordInput('')
+        
+        // Auto-advance to next level if available
+        if (nextLevels.length > 0) {
+          const nextLevel = availableLevels.find(l => l.id === nextLevels[0])
+          if (nextLevel) {
+            setTimeout(() => {
+              setCurrentLevel(nextLevel.id.toString())
+              setCurrentLevelName(nextLevel.name)
+              setCurrentLevelData(nextLevel)
+              setMessages([{
+                id: Date.now(),
+                type: 'system',
+                text: `LEVEL ${nextLevel.name.toUpperCase()} INITIATED. NEW SECURITY PROTOCOLS ACTIVE.`
+              }])
+            }, 2000)
+          }
+        }
+      } else {
+        // Password incorrect
+        const errorMessage = {
+          id: Date.now(),
+          type: 'system',
+          text: 'ACCESS DENIED! INCORRECT PASSWORD. SECURITY BREACH DETECTED.'
+        }
+        setMessages(prev => [...prev, errorMessage])
+        setPasswordInput('')
+      }
+    } catch (error) {
+      console.error('Password validation error:', error)
+      const errorMessage = {
+        id: Date.now(),
+        type: 'system',
+        text: 'SYSTEM ERROR: UNABLE TO VALIDATE PASSWORD.'
+      }
+      setMessages(prev => [...prev, errorMessage])
+    }
+  }
+
+  const switchLevel = (levelId) => {
+    if (!unlockedLevels.has(levelId.toString())) return
+    
+    const level = availableLevels.find(l => l.id === levelId)
+    if (level) {
+      audioManager.playSound('click')
+      setCurrentLevel(levelId.toString())
+      setCurrentLevelName(level.name)
+      setCurrentLevelData(level)
+      setMessages([{
+        id: Date.now(),
+        type: 'system',
+        text: `SWITCHING TO ${level.name.toUpperCase()}. SECURITY PROTOCOLS ACTIVE.`
+      }])
+    }
+  }
+
   return (
     <>
+      {showTutorial && <TutorialPopup onClose={closeTutorial} />}
       <div className="scanlines"></div>
       <div className={`password-container ${screenFlicker ? 'screen-flicker' : ''}`}>
         <div className="password-card">
@@ -117,25 +253,56 @@ export default function Chat() {
             </div>
             <div className="gatekeeper-message">
               <div className="nes-balloon from-left">
-                HALT! I AM THE GATEKEEPER OF {currentLevel.toUpperCase()}.<br />
+                HALT! I AM THE GATEKEEPER OF {currentLevelName.toUpperCase()}.<br />
                 PROVIDE THE SECRET PASSWORD TO PROCEED.<br />
                 NO PASSWORD = NO ENTRY!
               </div>
             </div>
           </div>
 
-          <form className="password-form">
+          <form className="password-form" onSubmit={validatePassword}>
             <div className="nes-field" style={{ flex: 1, marginRight: '1rem' }}>
               <input
                 type="password"
                 placeholder="ENTER LEVEL PASSWORD..."
                 className="nes-input"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
               />
             </div>
             <button type="submit" className="nes-btn" style={{ minWidth: '80px' }}>
               UNLOCK
             </button>
           </form>
+          
+          {/* Level Selector */}
+          {availableLevels.length > 1 && (
+            <div style={{ marginTop: '1rem', padding: '1rem', border: '1px solid #666' }}>
+              <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem' }}>AVAILABLE LEVELS:</h4>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {availableLevels.map(level => {
+                  const isUnlocked = unlockedLevels.has(level.id.toString())
+                  const isCurrent = currentLevel === level.id.toString()
+                  return (
+                    <button
+                      key={level.id}
+                      onClick={() => switchLevel(level.id)}
+                      disabled={!isUnlocked}
+                      className={`nes-btn ${isCurrent ? 'is-primary' : isUnlocked ? '' : 'is-disabled'}`}
+                      style={{ 
+                        fontSize: '0.7rem', 
+                        padding: '4px 8px',
+                        opacity: isUnlocked ? 1 : 0.5,
+                        cursor: isUnlocked ? 'pointer' : 'not-allowed'
+                      }}
+                    >
+                      {level.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <div className={`chat-container ${screenFlicker ? 'screen-flicker' : ''}`}>

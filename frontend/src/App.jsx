@@ -16,6 +16,7 @@ function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [musicPlaying, setMusicPlaying] = useState(false)
+  const [musicPaused, setMusicPaused] = useState(false)
 
   useEffect(() => {
     checkUser()
@@ -37,6 +38,14 @@ function App() {
     setUser(null)
     audioManager.stopBackgroundMusic()
     setMusicPlaying(false)
+    setMusicPaused(false)
+  }
+
+  const toggleMusic = () => {
+    audioManager.playSound('click')
+    const isPlaying = audioManager.toggleBackgroundMusic()
+    const state = audioManager.getMusicState()
+    setMusicPaused(state.isPaused)
   }
 
   // Start background music when user is authenticated
@@ -90,8 +99,15 @@ function App() {
               <Link to="/profile" className="nav-link" onClick={() => audioManager.playSound('click')}>Profile</Link>
             </div>
             <div className="nav-visualizer">
-              <SoundVisualizer isPlaying={musicPlaying} />
+              <SoundVisualizer isPlaying={musicPlaying && !musicPaused} />
             </div>
+            <button 
+              onClick={toggleMusic} 
+              className="nes-btn music-btn"
+              title={musicPaused ? 'Resume Music' : 'Pause Music'}
+            >
+              {musicPaused ? '▶' : '⏸'}
+            </button>
             <span className="welcome-text">Welcome, {user.name}</span>
             <button onClick={handleSignOut} className="nes-btn">Sign Out</button>
           </div>

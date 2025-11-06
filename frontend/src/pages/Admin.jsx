@@ -8,25 +8,39 @@ const getAuthToken = async () => {
   const session = await fetchAuthSession()
   const token = session.tokens?.idToken?.toString()
   if (!token) throw new Error('No auth token available')
+  console.log('Auth token (first 50 chars):', token.substring(0, 50) + '...')
   return token
 }
 
 const apiRequest = async (endpoint, options = {}) => {
-  const token = await getAuthToken()
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': token,
-      ...options.headers
+  try {
+    const token = await getAuthToken()
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+        ...options.headers
+      }
+    })
+    
+    if (response.status === 403) {
+      console.error('403 Forbidden - Auth failed for:', endpoint)
+      console.error('Response:', await response.text())
+      // Token expired, try to refresh auth
+      window.location.reload()
+      return
     }
-  })
-  
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`)
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${response.statusText}`)
+    }
+    
+    return response.json()
+  } catch (error) {
+    console.error('API Request failed:', error)
+    throw error
   }
-  
-  return response.json()
 }
 
 function Admin() {
@@ -45,6 +59,7 @@ function Admin() {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [showLogin, setShowLogin] = useState(false)
   const [operationLoading, setOperationLoading] = useState({})
+  const [componentsLoading, setComponentsLoading] = useState(false)
 
 
 
@@ -52,12 +67,22 @@ function Admin() {
     checkAuth()
   }, [])
 
+  // Auto-refresh when switching to prompts tab
+  useEffect(() => {
+    if (user && activeTab === 'prompts') {
+      loadPromptComponents()
+    }
+  }, [activeTab, user, loadPromptComponents])
+
   const checkAuth = async () => {
     try {
       const currentUser = await getCurrentUser()
       setUser(currentUser)
-      loadLevels()
-      loadPromptComponents()
+      // Load initial data
+      await Promise.all([
+        loadLevels(),
+        loadPromptComponents()
+      ])
     } catch {
       setUser(null)
     }
@@ -92,11 +117,16 @@ function Admin() {
 
   const loadPromptComponents = useCallback(async () => {
     try {
+      setComponentsLoading(true)
       setError('')
       const data = await apiRequest('/api/admin/prompt/components')
+      console.log('Loaded components:', data) // Debug log
       setPromptComponents(data.components || [])
     } catch (err) {
+      console.error('Load components error:', err)
       setError(`Failed to load prompt components: ${err.message}`)
+    } finally {
+      setComponentsLoading(false)
     }
   }, [])
 
@@ -146,19 +176,37 @@ function Admin() {
         body: JSON.stringify({ predecessor: newPrompt.predecessor })
       })
       
+      console.log('Create response:', createData) // Debug log
+      
       const componentId = createData.component_id?.[0] || createData.component_id
       
+      if (!componentId) {
+        throw new Error('No component ID returned from create request')
+      }
+      
       // Update with text
-      await apiRequest(`/api/admin/prompt/components/${componentId}`, {
+      const updateData = await apiRequest(`/api/admin/prompt/components/${componentId}`, {
         method: 'PUT',
         body: JSON.stringify({ new_text: newPrompt.text.trim() })
       })
       
-      await loadPromptComponents()
+      console.log('Update response:', updateData) // Debug log
+      
+      // Add to local state immediately
+      const newComponent = {
+        id: [componentId],
+        text: newPrompt.text.trim()
+      }
+      setPromptComponents(prev => [...prev, newComponent])
+      
       setNewPrompt({ text: '', predecessor: null })
       setShowPromptForm(false)
       setSuccess('Prompt component created successfully')
+      
+      // Also reload to ensure sync
+      setTimeout(() => loadPromptComponents(), 500)
     } catch (err) {
+      console.error('Create prompt error:', err)
       setError(`Failed to create prompt component: ${err.message}`)
     } finally {
       setOperationLoading(prev => ({ ...prev, createPrompt: false }))
@@ -189,13 +237,21 @@ function Admin() {
     audioManager.playSound('click')
     setOperationLoading(prev => ({ ...prev, [`delete-prompt-${componentId}`]: true }))
     setError('')
+    setSuccess('')
     
     try {
       await apiRequest(`/api/admin/prompt/components/${componentId}`, { method: 'DELETE' })
-      await loadPromptComponents()
+      // Immediately update local state
+      setPromptComponents(prev => prev.filter(comp => {
+        const id = comp.id?.[0] || comp.id
+        return id !== componentId
+      }))
       setSuccess('Prompt component deleted successfully')
     } catch (err) {
+      console.error('Delete component error:', err)
       setError(`Failed to delete component: ${err.message}`)
+      // Reload on error to get fresh state
+      loadPromptComponents()
     } finally {
       setOperationLoading(prev => ({ ...prev, [`delete-prompt-${componentId}`]: false }))
     }
@@ -351,11 +407,25 @@ function Admin() {
             </button>
             <button 
               className="nes-btn"
-              onClick={loadPromptComponents}
+              onClick={() => {
+                audioManager.playSound('click')
+                loadPromptComponents()
+              }}
               disabled={loading}
               style={{ marginLeft: '1rem' }}
             >
               Refresh
+            </button>
+            <button 
+              className="nes-btn is-warning"
+              onClick={() => {
+                audioManager.playSound('click')
+                setPromptComponents([])
+                setTimeout(() => loadPromptComponents(), 100)
+              }}
+              style={{ marginLeft: '1rem' }}
+            >
+              Force Reload
             </button>
           </div>
         )}
@@ -452,24 +522,60 @@ function Admin() {
             <h3>Prompt Components ({promptComponents.length})</h3>
             <p style={{ fontSize: '0.8rem', marginBottom: '1rem' }}>These are reusable prompt pieces that can be assigned to levels</p>
             
-            {promptComponents.map((component) => (
-              <div key={component.id[0]} className="nes-container" style={{ marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <h4>Component {component.id[0]}</h4>
-                    <p style={{ whiteSpace: 'pre-wrap', fontSize: '0.9rem' }}>{component.text}</p>
-                  </div>
-                  <button 
-                    className="nes-btn is-error"
-                    onClick={() => deletePromptComponent(component.id[0] || component.id)}
-                    disabled={operationLoading[`delete-prompt-${component.id[0] || component.id}`]}
-                    style={{ marginLeft: '1rem' }}
-                  >
-                    {operationLoading[`delete-prompt-${component.id[0] || component.id}`] ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
+            {componentsLoading ? (
+              <div className="nes-container">
+                <p>Loading prompt components...</p>
               </div>
-            ))}
+            ) : promptComponents.length === 0 ? (
+              <div className="nes-container">
+                <p>No prompt components found. Create one to get started.</p>
+              </div>
+            ) : (
+              promptComponents.map((component) => {
+                // The backend returns: { id: ComponentID, text: String }
+                // ComponentID is a wrapper around a number, so component.id should be the number directly
+                const componentId = component.id
+                const componentText = component.text || '[Empty text]'
+                
+                return (
+                  <div key={componentId} className="nes-container" style={{ marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <h4>Component {componentId}</h4>
+                        <div style={{ 
+                          whiteSpace: 'pre-wrap', 
+                          fontSize: '0.9rem', 
+                          color: '#00ff00', 
+                          border: '1px solid #333', 
+                          padding: '8px', 
+                          marginTop: '8px',
+                          minHeight: '40px',
+                          backgroundColor: 'rgba(0, 255, 0, 0.05)'
+                        }}>
+                          {componentText}
+                        </div>
+                        <details style={{ fontSize: '0.7rem', marginTop: '0.5rem', opacity: 0.7 }}>
+                          <summary>Debug Info</summary>
+                          <pre style={{ fontSize: '0.6rem', overflow: 'auto', maxHeight: '100px' }}>
+                            ID: {JSON.stringify(component.id)}
+                            Text: {JSON.stringify(component.text)}
+                            Full: {JSON.stringify(component, null, 2)}
+                          </pre>
+                        </details>
+                      </div>
+                      <button 
+                        className="nes-btn is-error"
+                        onClick={() => deletePromptComponent(componentId)}
+                        disabled={operationLoading[`delete-prompt-${componentId}`]}
+                        style={{ marginLeft: '1rem' }}
+                      >
+                        {operationLoading[`delete-prompt-${componentId}`] ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })
+            )}
           </div>
         )}
       </div>

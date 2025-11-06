@@ -195,6 +195,19 @@ body {
   margin-right: 10px;
 }
 
+.music-btn {
+  min-width: 40px !important;
+  padding: 8px !important;
+  font-size: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.music-btn:hover {
+  text-shadow: 0 0 10px var(--terminal-bg) !important;
+}
+
 .nav-links {
   display: flex;
   gap: 20px;
@@ -716,6 +729,95 @@ body {
   100% { opacity: 1; }
 }
 
+/* Tutorial Popup */
+.tutorial-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.tutorial-popup {
+  background: var(--terminal-bg);
+  border: 2px solid var(--terminal-text);
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+}
+
+.tutorial-header {
+  background: var(--terminal-text);
+  color: var(--terminal-bg);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Courier New', monospace;
+}
+
+.tutorial-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.tutorial-close {
+  background: none;
+  border: none;
+  color: var(--terminal-bg);
+  font-size: 24px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.tutorial-close:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tutorial-content {
+  padding: 20px;
+  color: var(--terminal-text);
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.tutorial-section {
+  margin-bottom: 20px;
+}
+
+.tutorial-section h3 {
+  color: var(--terminal-accent);
+  font-size: 14px;
+  margin-bottom: 10px;
+  text-shadow: 0 0 5px var(--terminal-accent);
+}
+
+.tutorial-section p {
+  margin: 5px 0;
+  padding-left: 10px;
+}
+
+.tutorial-footer {
+  padding: 20px;
+  text-align: center;
+  border-top: 2px solid var(--terminal-text);
+}
+
 /* Mobile Keyboard */
 .mobile-keyboard {
   position: fixed;
@@ -790,6 +892,25 @@ body {
     display: none;
   }
   
+  .music-btn {
+    min-width: 35px !important;
+    font-size: 14px !important;
+  }
+  
+  .tutorial-popup {
+    margin: 10px;
+    max-height: 90vh;
+  }
+  
+  .tutorial-content {
+    padding: 15px;
+    font-size: 11px;
+  }
+  
+  .tutorial-header h2 {
+    font-size: 14px;
+  }
+  
   .gatekeeper {
     flex-direction: column;
     text-align: center;
@@ -841,5 +962,34 @@ body {
   .gatekeeper-sprite {
     width: 60px;
     height: 60px;
+  }
+  
+  .music-btn {
+    min-width: 30px !important;
+    font-size: 12px !important;
+    padding: 6px !important;
+  }
+  
+  .tutorial-popup {
+    margin: 5px;
+  }
+  
+  .tutorial-content {
+    padding: 10px;
+    font-size: 10px;
+  }
+  
+  .tutorial-header {
+    padding: 10px 15px;
+  }
+  
+  .tutorial-header h2 {
+    font-size: 12px;
+  }
+  
+  .tutorial-close {
+    font-size: 20px;
+    width: 25px;
+    height: 25px;
   }
 }

@@ -7,8 +7,7 @@ import './nes-terminal-styles.css'
 
 const cognitoAuthConfig = {
   authority: "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_CP4ZyMSik",
-  client_id: "7bgrd9vmbepbe2pup7tupf18ba",
-  client_secret: "9nniqasmm9g9nkdb06707no5ic2nb1sfj9e7sci96gm7lr66mbs",
+  client_id: "6optohklh97aifpu3d4o7jvrh1",
   redirect_uri: "https://d1ec4fqqusaq2g.cloudfront.net/admin",
   response_type: "code",
   scope: "openid",

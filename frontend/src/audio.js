@@ -3,6 +3,8 @@ class AudioManager {
   constructor() {
     this.sounds = {}
     this.backgroundMusic = null
+    this.isMusicPlaying = false
+    this.isMusicPaused = false
     this.init()
   }
 
@@ -53,6 +55,8 @@ class AudioManager {
   playBackgroundMusic() {
     if (this.backgroundMusic) {
       this.backgroundMusic.play().catch(e => console.log('Audio play failed:', e))
+      this.isMusicPlaying = true
+      this.isMusicPaused = false
     }
   }
 
@@ -60,6 +64,42 @@ class AudioManager {
   stopBackgroundMusic() {
     if (this.backgroundMusic) {
       this.backgroundMusic.pause()
+      this.isMusicPlaying = false
+      this.isMusicPaused = false
+    }
+  }
+
+  // Pause background music
+  pauseBackgroundMusic() {
+    if (this.backgroundMusic && this.isMusicPlaying) {
+      this.backgroundMusic.pause()
+      this.isMusicPaused = true
+    }
+  }
+
+  // Resume background music
+  resumeBackgroundMusic() {
+    if (this.backgroundMusic && this.isMusicPaused) {
+      this.backgroundMusic.play().catch(e => console.log('Audio play failed:', e))
+      this.isMusicPaused = false
+    }
+  }
+
+  // Toggle music pause/resume
+  toggleBackgroundMusic() {
+    if (this.isMusicPaused) {
+      this.resumeBackgroundMusic()
+    } else if (this.isMusicPlaying) {
+      this.pauseBackgroundMusic()
+    }
+    return !this.isMusicPaused
+  }
+
+  // Get current music state
+  getMusicState() {
+    return {
+      isPlaying: this.isMusicPlaying,
+      isPaused: this.isMusicPaused
     }
   }
 
