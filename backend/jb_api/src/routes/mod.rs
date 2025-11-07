@@ -7,13 +7,13 @@ api_routes! {
         POST |-> async |user: crate::auth::AuthorizedModerator| { format!("Pong Authorized, hello {}", user.username()) };
     }
     ["levels"] {
-        GET |-> levels::get_levels;
+        GET --> levels::get_levels;
     }
     ["levels", (level_id), "chat", (session_id)] {
-        POST |-> levels::chat::chat_session;
+        POST --> levels::chat::chat_session;
     }
     ["levels", (level_id), "validate"] {
-        POST |-> levels::validate::validate_password;
+        POST --> levels::validate::validate_password;
     }
     ["admin", "levels"] {
         GET |-> levels::admin::admin_get_levels;

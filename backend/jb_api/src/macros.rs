@@ -106,14 +106,3 @@ macro_rules! error_response {
         }
     } };
 }
-
-error_response!(MyError {
-    /// Hello {asd}
-    Abc {
-        asd: u8,
-        xxx: String
-    },
-    /// Fuck {sec} off {first}
-    Def[FORBIDDEN](u8 as first, u16 as sec),
-    Dasasef(u8, u16, String),
-});
