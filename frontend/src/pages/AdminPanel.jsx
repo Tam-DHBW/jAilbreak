@@ -82,11 +82,13 @@ class AdminApiService {
     
     const componentId = createData.component_id
     
-    // Update with text
-    await this.request(`/admin/prompt/components/${componentId}`, {
-      method: 'PUT',
-      body: JSON.stringify({ new_text: text })
-    })
+    // Update with text immediately
+    if (text && text.trim()) {
+      await this.request(`/admin/prompt/components/${componentId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ new_text: text.trim() })
+      })
+    }
     
     return componentId
   }
@@ -94,6 +96,20 @@ class AdminApiService {
   async deleteComponent(componentId) {
     await this.request(`/admin/prompt/components/${componentId}`, {
       method: 'DELETE'
+    })
+  }
+
+  async updateComponent(componentId, text) {
+    await this.request(`/admin/prompt/components/${componentId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ new_text: text })
+    })
+  }
+
+  async moveComponent(componentId, direction) {
+    await this.request(`/admin/prompt/components/${componentId}/move`, {
+      method: 'POST',
+      body: JSON.stringify({ direction })
     })
   }
 }
@@ -119,6 +135,8 @@ function AdminPanel() {
     next: []
   })
   const [newComponentText, setNewComponentText] = useState('')
+  const [editingComponent, setEditingComponent] = useState(null)
+  const [editText, setEditText] = useState('')
 
   // API service
   const apiService = new AdminApiService(() => auth.user?.access_token)
@@ -265,6 +283,8 @@ function AdminPanel() {
     try {
       await apiService.createComponent(newComponentText.trim())
       setNewComponentText('')
+      // Add a small delay to ensure backend consistency
+      await new Promise(resolve => setTimeout(resolve, 500))
       await loadData()
       setSuccess('Component created')
     } catch (err) {
@@ -284,6 +304,46 @@ function AdminPanel() {
       setSuccess('Component deleted successfully')
     } catch (err) {
       setError(`Failed to delete component: ${err.message}`)
+    }
+  }
+
+  const startEditComponent = (component) => {
+    setEditingComponent(component.id)
+    setEditText(component.text)
+  }
+
+  const saveEditComponent = async () => {
+    try {
+      await apiService.updateComponent(editingComponent, editText)
+      setEditingComponent(null)
+      setEditText('')
+      await loadData()
+      setSuccess('Component updated')
+    } catch (err) {
+      setError(`Failed to update component: ${err.message}`)
+    }
+  }
+
+  const cancelEditComponent = () => {
+    setEditingComponent(null)
+    setEditText('')
+  }
+
+  const moveComponentUp = async (componentId) => {
+    try {
+      await apiService.moveComponent(componentId, 'up')
+      await loadData()
+    } catch (err) {
+      setError(`Failed to move component: ${err.message}`)
+    }
+  }
+
+  const moveComponentDown = async (componentId) => {
+    try {
+      await apiService.moveComponent(componentId, 'down')
+      await loadData()
+    } catch (err) {
+      setError(`Failed to move component: ${err.message}`)
     }
   }
 
@@ -502,10 +562,10 @@ function AdminPanel() {
 
             {/* Prompt Components */}
             <div style={{ marginBottom: '2rem' }}>
-              <h4>Prompt components</h4>
+              <h4>Prompt components ({components.length})</h4>
               
               <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '1rem' }}>
-                {components.map(component => (
+                {components.map((component, index) => (
                   <div 
                     key={component.id} 
                     style={{ 
@@ -526,30 +586,43 @@ function AdminPanel() {
                         onChange={() => toggleComponent(component.id)}
                         style={{ marginTop: '0.2rem' }}
                       />
-                      <span style={{ 
-                        fontSize: '0.9rem', 
-                        lineHeight: '1.4',
-                        wordBreak: 'break-word'
-                      }}>
-                        {component.text || '[Empty component]'}
-                      </span>
+                      {editingComponent === component.id ? (
+                        <textarea
+                          className="nes-textarea"
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          rows={2}
+                          style={{ flex: 1, fontSize: '0.9rem' }}
+                        />
+                      ) : (
+                        <span style={{ 
+                          fontSize: '0.9rem', 
+                          lineHeight: '1.4',
+                          wordBreak: 'break-word'
+                        }}>
+                          {component.text || '[Empty component]'}
+                        </span>
+                      )}
                     </label>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        deleteComponent(component.id)
-                      }}
-                      className="nes-btn is-error"
-                      style={{ 
-                        fontSize: '12px', 
-                        padding: '4px 8px', 
-                        marginLeft: '1rem',
-                        minWidth: '30px'
-                      }}
-                      title="Delete component"
-                    >
-                      ✕
-                    </button>
+                    <div style={{ display: 'flex', gap: '4px', marginLeft: '1rem' }}>
+                      {editingComponent === component.id ? (
+                        <>
+                          <button onClick={saveEditComponent} className="nes-btn is-success" style={{ fontSize: '10px', padding: '2px 4px' }}>✓</button>
+                          <button onClick={cancelEditComponent} className="nes-btn" style={{ fontSize: '10px', padding: '2px 4px' }}>✕</button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => startEditComponent(component)} className="nes-btn is-primary" style={{ fontSize: '10px', padding: '2px 4px' }}>✎</button>
+                          {index > 0 && (
+                            <button onClick={() => moveComponentUp(component.id)} className="nes-btn" style={{ fontSize: '10px', padding: '2px 4px' }}>↑</button>
+                          )}
+                          {index < components.length - 1 && (
+                            <button onClick={() => moveComponentDown(component.id)} className="nes-btn" style={{ fontSize: '10px', padding: '2px 4px' }}>↓</button>
+                          )}
+                          <button onClick={() => deleteComponent(component.id)} className="nes-btn is-error" style={{ fontSize: '10px', padding: '2px 4px' }}>✕</button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

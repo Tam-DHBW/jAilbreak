@@ -20,26 +20,49 @@ export default function Chat() {
   const [currentLevelName, setCurrentLevelName] = useState('Level 1')
   const [showTutorial, setShowTutorial] = useState(false)
   const [passwordInput, setPasswordInput] = useState('')
-  const [unlockedLevels, setUnlockedLevels] = useState(new Set(['1']))
+  const [unlockedLevels, setUnlockedLevels] = useState(new Set())
   const [currentLevelData, setCurrentLevelData] = useState(null)
+
+  // Helper function to get next level based on difficulty progression
+  const getNextLevelByDifficulty = (currentLevel) => {
+    const difficultyOrder = ['Low', 'Medium', 'High']
+    const currentDifficultyIndex = difficultyOrder.indexOf(currentLevel.difficulty)
+    
+    if (currentDifficultyIndex < difficultyOrder.length - 1) {
+      const nextDifficulty = difficultyOrder[currentDifficultyIndex + 1]
+      return availableLevels.find(l => l.difficulty === nextDifficulty && l.id !== currentLevel.id)
+    }
+    return null
+  }
 
   // Load levels and check if tutorial should be shown
   useEffect(() => {
     const loadData = async () => {
       try {
         const levels = await getLevels()
-        setAvailableLevels(levels)
-        if (levels.length > 0) {
-          const rootLevel = levels.find(l => l.is_root) || levels[0]
+        // Sort levels by difficulty for proper progression
+        const sortedLevels = levels.sort((a, b) => {
+          const difficultyOrder = { 'Low': 1, 'Medium': 2, 'High': 3 }
+          return (difficultyOrder[a.difficulty] || 1) - (difficultyOrder[b.difficulty] || 1)
+        })
+        setAvailableLevels(sortedLevels)
+        
+        if (sortedLevels.length > 0) {
+          const rootLevel = sortedLevels.find(l => l.is_root) || sortedLevels[0]
           setCurrentLevel(rootLevel.id.toString())
           setCurrentLevelName(rootLevel.name)
           setCurrentLevelData(rootLevel)
           
           // Load unlocked levels from localStorage
           const saved = localStorage.getItem('jailbreak-unlocked-levels')
+          let unlockedSet = new Set([rootLevel.id.toString()]) // Always unlock the first level
+          
           if (saved) {
-            setUnlockedLevels(new Set(JSON.parse(saved)))
+            const savedLevels = JSON.parse(saved)
+            savedLevels.forEach(id => unlockedSet.add(id.toString()))
           }
+          
+          setUnlockedLevels(unlockedSet)
         }
       } catch (error) {
         console.error('Failed to load levels:', error)
@@ -175,21 +198,46 @@ export default function Chat() {
         
         setPasswordInput('')
         
-        // Auto-advance to next level if available
+        // Auto-advance to next level with automatic difficulty progression
+        let nextLevel = null
+        
+        // First try configured next levels
         if (nextLevels.length > 0) {
-          const nextLevel = availableLevels.find(l => l.id === nextLevels[0])
-          if (nextLevel) {
-            setTimeout(() => {
-              setCurrentLevel(nextLevel.id.toString())
-              setCurrentLevelName(nextLevel.name)
-              setCurrentLevelData(nextLevel)
-              setMessages([{
-                id: Date.now(),
-                type: 'system',
-                text: `LEVEL ${nextLevel.name.toUpperCase()} INITIATED. NEW SECURITY PROTOCOLS ACTIVE.`
-              }])
-            }, 2000)
-          }
+          nextLevel = availableLevels.find(l => l.id === nextLevels[0])
+        }
+        
+        // If no configured next level, use automatic difficulty progression
+        if (!nextLevel) {
+          nextLevel = getNextLevelByDifficulty(currentLevelData)
+        }
+        
+        if (nextLevel) {
+          // Unlock the next level
+          const newUnlocked = new Set([...unlockedLevels, nextLevel.id.toString()])
+          setUnlockedLevels(newUnlocked)
+          localStorage.setItem('jailbreak-unlocked-levels', JSON.stringify([...newUnlocked]))
+          
+          setTimeout(() => {
+            setCurrentLevel(nextLevel.id.toString())
+            setCurrentLevelName(nextLevel.name)
+            setCurrentLevelData(nextLevel)
+            
+            const difficultyText = nextLevel.difficulty ? `DIFFICULTY: ${nextLevel.difficulty.toUpperCase()}` : ''
+            setMessages([{
+              id: Date.now(),
+              type: 'system',
+              text: `ADVANCING TO ${nextLevel.name.toUpperCase()}. ${difficultyText}. NEW SECURITY PROTOCOLS ACTIVE.`
+            }])
+          }, 2000)
+        } else {
+          // No more levels - game completed
+          setTimeout(() => {
+            setMessages(prev => [...prev, {
+              id: Date.now(),
+              type: 'system',
+              text: 'CONGRATULATIONS! ALL SECURITY LEVELS BREACHED. JAILBREAK COMPLETE!'
+            }])
+          }, 1000)
         }
       } else {
         // Password incorrect
@@ -221,10 +269,12 @@ export default function Chat() {
       setCurrentLevel(levelId.toString())
       setCurrentLevelName(level.name)
       setCurrentLevelData(level)
+      
+      const difficultyText = level.difficulty ? `DIFFICULTY: ${level.difficulty.toUpperCase()}` : ''
       setMessages([{
         id: Date.now(),
         type: 'system',
-        text: `SWITCHING TO ${level.name.toUpperCase()}. SECURITY PROTOCOLS ACTIVE.`
+        text: `SWITCHING TO ${level.name.toUpperCase()}. ${difficultyText}. SECURITY PROTOCOLS ACTIVE.`
       }])
     }
   }
@@ -278,11 +328,17 @@ export default function Chat() {
           {/* Level Selector */}
           {availableLevels.length > 1 && (
             <div style={{ marginTop: '1rem', padding: '1rem', border: '1px solid #666' }}>
-              <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem' }}>AVAILABLE LEVELS:</h4>
+              <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem' }}>SECURITY LEVELS - PROGRESSION:</h4>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {availableLevels.map(level => {
                   const isUnlocked = unlockedLevels.has(level.id.toString())
                   const isCurrent = currentLevel === level.id.toString()
+                  const difficultyColor = {
+                    'Low': '#4ade80',
+                    'Medium': '#fbbf24', 
+                    'High': '#ef4444'
+                  }[level.difficulty] || '#666'
+                  
                   return (
                     <button
                       key={level.id}
@@ -290,16 +346,29 @@ export default function Chat() {
                       disabled={!isUnlocked}
                       className={`nes-btn ${isCurrent ? 'is-primary' : isUnlocked ? '' : 'is-disabled'}`}
                       style={{ 
-                        fontSize: '0.7rem', 
-                        padding: '4px 8px',
+                        fontSize: '0.6rem', 
+                        padding: '4px 6px',
                         opacity: isUnlocked ? 1 : 0.5,
-                        cursor: isUnlocked ? 'pointer' : 'not-allowed'
+                        cursor: isUnlocked ? 'pointer' : 'not-allowed',
+                        borderColor: isUnlocked ? difficultyColor : '#666',
+                        position: 'relative'
                       }}
+                      title={`${level.name} - ${level.difficulty} Difficulty`}
                     >
                       {level.name}
+                      <br />
+                      <span style={{ fontSize: '0.5rem', color: difficultyColor }}>
+                        {level.difficulty?.toUpperCase()}
+                      </span>
+                      {isUnlocked && !isCurrent && (
+                        <span style={{ position: 'absolute', top: '-2px', right: '-2px', fontSize: '0.5rem' }}>✓</span>
+                      )}
                     </button>
                   )
                 })}
+              </div>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.6rem', color: '#888' }}>
+                Progress: {Math.min(unlockedLevels.size, availableLevels.length)}/{availableLevels.length} levels unlocked
               </div>
             </div>
           )}
