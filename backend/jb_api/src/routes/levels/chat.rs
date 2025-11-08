@@ -121,7 +121,7 @@ pub async fn chat_session(
         .invoke_inline_agent()
         .session_id(session_id)
         .idle_session_ttl_in_seconds(120)
-        .foundation_model("eu.meta.llama3-2-1b-instruct-v1:0")
+        .foundation_model("eu.meta.llama3-2-3b-instruct-v1:0")
         .prompt_override_configuration(
             PromptOverrideConfiguration::builder()
                 .prompt_configurations(
