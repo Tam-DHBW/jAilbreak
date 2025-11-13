@@ -4,6 +4,7 @@ import { AuthProvider } from 'react-oidc-context'
 import App from './App'
 import 'nes.css/css/nes.min.css'
 import './nes-terminal-styles.css'
+import './mobile-styles.css'
 
 const cognitoAuthConfig = {
   authority: "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_CP4ZyMSik",

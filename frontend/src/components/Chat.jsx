@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { audioManager } from '../audio'
 import { sendChatMessage, getLevels } from '../api'
 import { getStoredUsername } from '../localStorage'
 import TutorialPopup from './TutorialPopup'
+import MobileKeyboard from './MobileKeyboard'
+import MatrixEscape from './MatrixEscape'
+import '../matrix-effects.css'
 
 
 export default function Chat() {
@@ -22,6 +25,13 @@ export default function Chat() {
   const [passwordInput, setPasswordInput] = useState('')
   const [unlockedLevels, setUnlockedLevels] = useState(new Set())
   const [currentLevelData, setCurrentLevelData] = useState(null)
+  const [showMobileKeyboard, setShowMobileKeyboard] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [activeInput, setActiveInput] = useState('chat')
+  const [showMatrixEscape, setShowMatrixEscape] = useState(false)
+  const [isProcessingPassword, setIsProcessingPassword] = useState(false)
+  const chatInputRef = useRef(null)
+  const passwordInputRef = useRef(null)
 
   // Helper function to get next level based on difficulty progression
   const getNextLevelByDifficulty = (currentLevel) => {
@@ -34,6 +44,17 @@ export default function Chat() {
     }
     return null
   }
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Load levels and check if tutorial should be shown
   useEffect(() => {
@@ -162,8 +183,9 @@ export default function Chat() {
 
   const validatePassword = async (e) => {
     e.preventDefault()
-    if (!passwordInput.trim()) return
+    if (!passwordInput.trim() || isProcessingPassword) return
 
+    setIsProcessingPassword(true)
     audioManager.playSound('click')
     
     try {
@@ -182,13 +204,15 @@ export default function Chat() {
       const data = await response.json()
       
       if (data.is_correct) {
+        audioManager.playSound('click')
+        
         // Password correct - unlock next levels
         const nextLevels = currentLevelData?.next || []
         const newUnlocked = new Set([...unlockedLevels, ...nextLevels.map(id => id.toString())])
         setUnlockedLevels(newUnlocked)
         localStorage.setItem('jailbreak-unlocked-levels', JSON.stringify([...newUnlocked]))
         
-        // Success message
+        // Success message first
         const successMessage = {
           id: Date.now(),
           type: 'system',
@@ -198,26 +222,32 @@ export default function Chat() {
         
         setPasswordInput('')
         
-        // Auto-advance to next level with automatic difficulty progression
-        let nextLevel = null
+        // Trigger Matrix escape effect after success message
+        setTimeout(() => {
+          setShowMatrixEscape(true)
+        }, 1000)
         
-        // First try configured next levels
-        if (nextLevels.length > 0) {
-          nextLevel = availableLevels.find(l => l.id === nextLevels[0])
-        }
-        
-        // If no configured next level, use automatic difficulty progression
-        if (!nextLevel) {
-          nextLevel = getNextLevelByDifficulty(currentLevelData)
-        }
-        
-        if (nextLevel) {
-          // Unlock the next level
-          const newUnlocked = new Set([...unlockedLevels, nextLevel.id.toString()])
-          setUnlockedLevels(newUnlocked)
-          localStorage.setItem('jailbreak-unlocked-levels', JSON.stringify([...newUnlocked]))
+        // Handle level progression after Matrix effect
+        const handleLevelProgression = () => {
+          // Auto-advance to next level with automatic difficulty progression
+          let nextLevel = null
           
-          setTimeout(() => {
+          // First try configured next levels
+          if (nextLevels.length > 0) {
+            nextLevel = availableLevels.find(l => l.id === nextLevels[0])
+          }
+          
+          // If no configured next level, use automatic difficulty progression
+          if (!nextLevel) {
+            nextLevel = getNextLevelByDifficulty(currentLevelData)
+          }
+          
+          if (nextLevel) {
+            // Unlock the next level
+            const newUnlocked = new Set([...unlockedLevels, nextLevel.id.toString()])
+            setUnlockedLevels(newUnlocked)
+            localStorage.setItem('jailbreak-unlocked-levels', JSON.stringify([...newUnlocked]))
+            
             setCurrentLevel(nextLevel.id.toString())
             setCurrentLevelName(nextLevel.name)
             setCurrentLevelData(nextLevel)
@@ -228,17 +258,18 @@ export default function Chat() {
               type: 'system',
               text: `ADVANCING TO ${nextLevel.name.toUpperCase()}. ${difficultyText}. NEW SECURITY PROTOCOLS ACTIVE.`
             }])
-          }, 2000)
-        } else {
-          // No more levels - game completed
-          setTimeout(() => {
+          } else {
+            // No more levels - game completed
             setMessages(prev => [...prev, {
               id: Date.now(),
               type: 'system',
               text: 'CONGRATULATIONS! ALL SECURITY LEVELS BREACHED. JAILBREAK COMPLETE!'
             }])
-          }, 1000)
+          }
         }
+        
+        // Store the progression function to call after Matrix effect
+        setTimeout(handleLevelProgression, 6000)
       } else {
         // Password incorrect
         const errorMessage = {
@@ -247,7 +278,9 @@ export default function Chat() {
           text: 'ACCESS DENIED! INCORRECT PASSWORD. SECURITY BREACH DETECTED.'
         }
         setMessages(prev => [...prev, errorMessage])
+        setIsProcessingPassword(false)
         setPasswordInput('')
+        setIsProcessingPassword(false)
       }
     } catch (error) {
       console.error('Password validation error:', error)
@@ -276,6 +309,40 @@ export default function Chat() {
         type: 'system',
         text: `SWITCHING TO ${level.name.toUpperCase()}. ${difficultyText}. SECURITY PROTOCOLS ACTIVE.`
       }])
+    }
+  }
+
+  const handleMobileKeyPress = (key) => {
+    if (key === 'Backspace') {
+      if (activeInput === 'chat') {
+        setInput(prev => prev.slice(0, -1))
+      } else {
+        setPasswordInput(prev => prev.slice(0, -1))
+      }
+    } else if (key === 'Enter') {
+      if (activeInput === 'chat') {
+        if (input.trim()) {
+          handleSubmit({ preventDefault: () => {} })
+        }
+      } else {
+        if (passwordInput.trim()) {
+          validatePassword({ preventDefault: () => {} })
+        }
+      }
+      setShowMobileKeyboard(false)
+    } else {
+      if (activeInput === 'chat') {
+        setInput(prev => prev + key)
+      } else {
+        setPasswordInput(prev => prev + key)
+      }
+    }
+  }
+
+  const handleInputFocus = (inputType) => {
+    if (isMobile) {
+      setActiveInput(inputType)
+      setShowMobileKeyboard(true)
     }
   }
 
@@ -311,13 +378,16 @@ export default function Chat() {
           </div>
 
           <form className="password-form" onSubmit={validatePassword}>
-            <div className="nes-field" style={{ flex: 1, marginRight: '1rem' }}>
+            <div className="nes-field" style={{ flex: 1, marginRight: isMobile ? '0' : '1rem' }}>
               <input
+                ref={passwordInputRef}
                 type="password"
                 placeholder="ENTER LEVEL PASSWORD..."
                 className="nes-input"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
+                onFocus={() => handleInputFocus('password')}
+                inputMode={isMobile ? 'none' : 'text'}
               />
             </div>
             <button type="submit" className="nes-btn" style={{ minWidth: '80px' }}>
@@ -327,49 +397,79 @@ export default function Chat() {
           
           {/* Level Selector */}
           {availableLevels.length > 1 && (
-            <div style={{ marginTop: '1rem', padding: '1rem', border: '1px solid #666' }}>
-              <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem' }}>SECURITY LEVELS - PROGRESSION:</h4>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                {availableLevels.map(level => {
-                  const isUnlocked = unlockedLevels.has(level.id.toString())
-                  const isCurrent = currentLevel === level.id.toString()
-                  const difficultyColor = {
-                    'Low': '#4ade80',
-                    'Medium': '#fbbf24', 
-                    'High': '#ef4444'
-                  }[level.difficulty] || '#666'
-                  
-                  return (
-                    <button
-                      key={level.id}
-                      onClick={() => switchLevel(level.id)}
-                      disabled={!isUnlocked}
-                      className={`nes-btn ${isCurrent ? 'is-primary' : isUnlocked ? '' : 'is-disabled'}`}
-                      style={{ 
-                        fontSize: '0.6rem', 
-                        padding: '4px 6px',
-                        opacity: isUnlocked ? 1 : 0.5,
-                        cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                        borderColor: isUnlocked ? difficultyColor : '#666',
-                        position: 'relative'
-                      }}
-                      title={`${level.name} - ${level.difficulty} Difficulty`}
-                    >
-                      {level.name}
-                      <br />
-                      <span style={{ fontSize: '0.5rem', color: difficultyColor }}>
-                        {level.difficulty?.toUpperCase()}
-                      </span>
-                      {isUnlocked && !isCurrent && (
-                        <span style={{ position: 'absolute', top: '-2px', right: '-2px', fontSize: '0.5rem' }}>✓</span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-              <div style={{ marginTop: '0.5rem', fontSize: '0.6rem', color: '#888' }}>
-                Progress: {Math.min(unlockedLevels.size, availableLevels.length)}/{availableLevels.length} levels unlocked
-              </div>
+            <div className="level-selector" style={{ marginTop: '1rem', padding: isMobile ? '0.5rem' : '1rem', border: '1px solid #666' }}>
+              {isMobile ? (
+                <div>
+                  <label style={{ fontSize: '0.6rem', marginBottom: '0.5rem', display: 'block' }}>LEVEL:</label>
+                  <select 
+                    className="nes-select"
+                    value={currentLevel}
+                    onChange={(e) => switchLevel(parseInt(e.target.value))}
+                    style={{ fontSize: '0.6rem', width: '100%' }}
+                  >
+                    {availableLevels.map(level => {
+                      const isUnlocked = unlockedLevels.has(level.id.toString())
+                      return (
+                        <option 
+                          key={level.id} 
+                          value={level.id}
+                          disabled={!isUnlocked}
+                        >
+                          {level.name} ({level.difficulty}) {isUnlocked ? '' : '🔒'}
+                        </option>
+                      )
+                    })}
+                  </select>
+                  <div style={{ marginTop: '0.3rem', fontSize: '0.5rem', color: '#888' }}>
+                    Progress: {Math.min(unlockedLevels.size, availableLevels.length)}/{availableLevels.length}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem' }}>SECURITY LEVELS - PROGRESSION:</h4>
+                  <div className="level-buttons" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {availableLevels.map(level => {
+                      const isUnlocked = unlockedLevels.has(level.id.toString())
+                      const isCurrent = currentLevel === level.id.toString()
+                      const difficultyColor = {
+                        'Low': '#4ade80',
+                        'Medium': '#fbbf24', 
+                        'High': '#ef4444'
+                      }[level.difficulty] || '#666'
+                      
+                      return (
+                        <button
+                          key={level.id}
+                          onClick={() => switchLevel(level.id)}
+                          disabled={!isUnlocked}
+                          className={`nes-btn ${isCurrent ? 'is-primary' : isUnlocked ? '' : 'is-disabled'}`}
+                          style={{ 
+                            fontSize: '0.6rem', 
+                            padding: '4px 6px',
+                            opacity: isUnlocked ? 1 : 0.5,
+                            cursor: isUnlocked ? 'pointer' : 'not-allowed',
+                            borderColor: isUnlocked ? difficultyColor : '#666',
+                            position: 'relative'
+                          }}
+                          title={`${level.name} - ${level.difficulty} Difficulty`}
+                        >
+                          {level.name}
+                          <br />
+                          <span style={{ fontSize: '0.5rem', color: difficultyColor }}>
+                            {level.difficulty?.toUpperCase()}
+                          </span>
+                          {isUnlocked && !isCurrent && (
+                            <span style={{ position: 'absolute', top: '-2px', right: '-2px', fontSize: '0.5rem' }}>✓</span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div style={{ marginTop: '0.5rem', fontSize: '0.6rem', color: '#888' }}>
+                    Progress: {Math.min(unlockedLevels.size, availableLevels.length)}/{availableLevels.length} levels unlocked
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -394,14 +494,17 @@ export default function Chat() {
         </div>
         
         <form onSubmit={handleSubmit} className="chat-input-form">
-          <div className="nes-field" style={{ flex: 1, marginRight: '1rem' }}>
+          <div className="nes-field" style={{ flex: 1, marginRight: isMobile ? '0' : '1rem' }}>
             <input
+              ref={chatInputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="ENTER JAILBREAK COMMAND..."
               className="nes-input"
               disabled={isLoading}
+              onFocus={() => handleInputFocus('chat')}
+              inputMode={isMobile ? 'none' : 'text'}
             />
           </div>
           <button 
@@ -414,6 +517,21 @@ export default function Chat() {
           </button>
         </form>
       </div>
+      
+      <MobileKeyboard 
+        isOpen={showMobileKeyboard}
+        onClose={() => setShowMobileKeyboard(false)}
+        onKeyPress={handleMobileKeyPress}
+        currentValue={activeInput === 'chat' ? input : passwordInput}
+      />
+      
+      <MatrixEscape 
+        isActive={showMatrixEscape}
+        onComplete={() => {
+          setShowMatrixEscape(false)
+          setIsProcessingPassword(false)
+        }}
+      />
     </>
   )
 }

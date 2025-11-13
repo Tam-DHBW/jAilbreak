@@ -6,17 +6,20 @@ import SoundVisualizer from './components/SoundVisualizer'
 import ProgressBar from './components/ProgressBar'
 import Auth from './components/Auth'
 import Chat from './components/Chat'
+import MobileMenu from './components/MobileMenu'
 import Home from './pages/Home'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import Profile from './pages/Profile'
 import AdminPanel from './pages/AdminPanel'
+import './mobile-styles.css'
 
 function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [musicPlaying, setMusicPlaying] = useState(false)
   const [musicPaused, setMusicPaused] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     checkUser()
@@ -39,6 +42,7 @@ function App() {
     audioManager.stopBackgroundMusic()
     setMusicPlaying(false)
     setMusicPaused(false)
+    setMobileMenuOpen(false)
   }
 
   const toggleMusic = () => {
@@ -91,7 +95,7 @@ function App() {
         <nav className="navbar">
           <div className="logo">jAILBREAK</div>
           <div className="nav-right">
-            <div className="nav-links">
+            <div className="nav-links desktop-only">
               <Link to="/" className="nav-link" onClick={() => audioManager.playSound('click')}>Home</Link>
               <Link to="/game" className="nav-link" onClick={() => audioManager.playSound('click')}>Game</Link>
               <Link to="/about" className="nav-link" onClick={() => audioManager.playSound('click')}>About</Link>
@@ -108,10 +112,24 @@ function App() {
             >
               {musicPaused ? '▶' : '⏸'}
             </button>
-            <span className="welcome-text">Welcome, {user.name}</span>
-            <button onClick={handleSignOut} className="nes-btn">Sign Out</button>
+            <span className="welcome-text desktop-only">Welcome, {user.name}</span>
+            <button onClick={handleSignOut} className="nes-btn desktop-only">Sign Out</button>
+            <button 
+              onClick={() => setMobileMenuOpen(true)} 
+              className="nes-btn mobile-only"
+              style={{ display: 'none' }}
+            >
+              ☰
+            </button>
           </div>
         </nav>
+        
+        <MobileMenu 
+          isOpen={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          onSignOut={handleSignOut}
+          userName={user.name}
+        />
         
         <Routes>
           <Route path="/" element={<Home />} />

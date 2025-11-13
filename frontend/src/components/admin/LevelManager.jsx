@@ -47,8 +47,8 @@ export default function LevelManager() {
   }
 
   return (
-    <div>
-      <h2>Level Management</h2>
+    <div style={{ padding: window.innerWidth <= 768 ? '10px' : '20px' }}>
+      <h2 style={{ fontSize: window.innerWidth <= 768 ? '14px' : '18px' }}>Level Management</h2>
       
       {error && (
         <div className="nes-container is-error" style={{ marginBottom: '1rem' }}>
@@ -59,16 +59,25 @@ export default function LevelManager() {
 
       <form onSubmit={createLevel} style={{ marginBottom: '2rem' }}>
         <div className="nes-field">
-          <label>Level Name:</label>
+          <label style={{ fontSize: window.innerWidth <= 768 ? '10px' : '12px' }}>Level Name:</label>
           <input
             type="text"
             className="nes-input"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter level name"
+            style={{ fontSize: window.innerWidth <= 768 ? '10px' : '12px' }}
           />
         </div>
-        <button type="submit" className="nes-btn is-primary" style={{ marginTop: '1rem' }}>
+        <button 
+          type="submit" 
+          className="nes-btn is-primary" 
+          style={{ 
+            marginTop: '1rem',
+            fontSize: window.innerWidth <= 768 ? '10px' : '12px',
+            padding: window.innerWidth <= 768 ? '6px 10px' : '8px 12px'
+          }}
+        >
           Create Level
         </button>
       </form>
@@ -79,9 +88,9 @@ export default function LevelManager() {
             <tr>
               <th>ID</th>
               <th>Name</th>
-              <th>Password</th>
+              <th className="desktop-only">Password</th>
               <th>Difficulty</th>
-              <th>Root</th>
+              <th className="desktop-only">Root</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -89,17 +98,20 @@ export default function LevelManager() {
             {levels.map(level => (
               <tr key={level.level_id}>
                 <td>{level.level_id}</td>
-                <td>{level.name}</td>
-                <td>{level.password}</td>
-                <td>{level.difficulty}</td>
-                <td>{level.is_root ? 'Yes' : 'No'}</td>
+                <td style={{ fontSize: window.innerWidth <= 768 ? '10px' : '12px' }}>{level.name}</td>
+                <td className="desktop-only">{level.password}</td>
+                <td style={{ fontSize: window.innerWidth <= 768 ? '8px' : '12px' }}>{level.difficulty}</td>
+                <td className="desktop-only">{level.is_root ? 'Yes' : 'No'}</td>
                 <td>
                   <button 
                     onClick={() => deleteLevel(level.level_id)}
                     className="nes-btn is-error"
-                    style={{ fontSize: '12px', padding: '4px 8px' }}
+                    style={{ 
+                      fontSize: window.innerWidth <= 768 ? '8px' : '12px', 
+                      padding: window.innerWidth <= 768 ? '2px 4px' : '4px 8px' 
+                    }}
                   >
-                    Delete
+                    {window.innerWidth <= 768 ? 'Del' : 'Delete'}
                   </button>
                 </td>
               </tr>
