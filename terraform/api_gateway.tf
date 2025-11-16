@@ -48,7 +48,7 @@ resource "aws_api_gateway_rest_api" "rest_api" {
           x-amazon-apigateway-authorizer = {
             type          = "token",
             authorizerUri = aws_lambda_function.authorizer.invoke_arn
-            authorizerResultTtlInSeconds = 3
+            authorizerResultTtlInSeconds = 0 # Caching requires us to return ALL allowed method ARNs, not just the current one
           }
         }
       }
@@ -56,7 +56,9 @@ resource "aws_api_gateway_rest_api" "rest_api" {
     x-amazon-apigateway-gateway-responses = {
       ACCESS_DENIED = {
         responseTemplates = {
-          "application/json" = jsonencode({ message = "$context.authorizer.message" })
+          "application/json" = <<-TEMPLATE
+            { "message": $context.error.messageString, "authorizerMessage": "$context.authorizer.message" }
+          TEMPLATE
         }
       }
     }
