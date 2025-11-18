@@ -1,3 +1,5 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use aws_sdk_bedrockagentruntime::types::{
     CreationMode, InferenceConfiguration, InlineAgentPayloadPart, InlineAgentResponseStream,
     PromptConfiguration, PromptOverrideConfiguration, PromptState, PromptType,
@@ -114,12 +116,17 @@ pub async fn chat_session(
         ]
     });
 
-    let session_id = format!("level{level_id}-{session_id}", level_id = level_id.0);
+    let final_session_id = {
+        let mut hasher = DefaultHasher::default();
+        user_info.username.hash(&mut hasher);
+        session_id.hash(&mut hasher);
+        format!("{:x}", hasher.finish())
+    };
 
     let mut response = state
         .bedrockagent
         .invoke_inline_agent()
-        .session_id(session_id)
+        .session_id(final_session_id)
         .idle_session_ttl_in_seconds(120)
         .foundation_model("eu.meta.llama3-2-3b-instruct-v1:0")
         .prompt_override_configuration(
