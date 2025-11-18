@@ -169,7 +169,10 @@ pub async fn admin_modify_level(
     }
 
     if let Some(is_root) = request.is_root {
-        actions.push(("is_root", (db::Level::IS_ROOT, AttributeValue::Bool(is_root))));
+        actions.push((
+            "is_root",
+            (db::Level::IS_ROOT, AttributeValue::Bool(is_root)),
+        ));
     }
 
     if let Some(next) = request.next {
@@ -184,6 +187,18 @@ pub async fn admin_modify_level(
         ));
     }
 
+    if actions.is_empty() {
+        return Ok(());
+    }
+
+    let update_expression = format!(
+        "SET {}",
+        actions
+            .iter()
+            .map(|(placeholder, _)| format!("#{placeholder} = :{placeholder}"))
+            .join(" ,")
+    );
+
     let mut update = state
         .dynamo
         .update_item()
@@ -195,12 +210,7 @@ pub async fn admin_modify_level(
         .condition_expression("#pk = :pk")
         .expression_attribute_names("#pk", db::Level::PARTITION)
         .expression_attribute_values(":pk", AttributeValue::N(level_id.0.to_string()))
-        .update_expression(
-            actions
-                .iter()
-                .map(|(placeholder, _)| format!("SET #{placeholder} = :{placeholder}"))
-                .join(" "),
-        );
+        .update_expression(update_expression);
 
     for (placeholder, (key, value)) in actions {
         update = update
